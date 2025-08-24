@@ -7,13 +7,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3a0ca3;
-            --accent-color: #7209b7;
+            --primary-color: #dc2626;
+            --secondary-color: #1f2937;
+            --accent-color: #991b1b;
             --light-color: #f8f9fa;
-            --dark-color: #212529;
-            --success-color: #4cc9f0;
-            --warning-color: #f72585;
+            --dark-color: #111827;
+            --success-color: #059669;
+            --warning-color: #d97706;
             --border-radius: 12px;
             --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
             --transition: all 0.3s ease;
@@ -90,6 +90,34 @@
         @media (max-width: 900px) {
             .main-content {
                 grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            body {
+                padding: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .tagline {
+                font-size: 1rem;
+            }
+            
+            .form-container {
+                padding: 15px;
+            }
+            
+            select, input, button {
+                padding: 12px;
+                font-size: 14px;
             }
         }
 
@@ -130,7 +158,7 @@
         select:focus, input:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
         }
 
         button {
@@ -166,6 +194,14 @@
             display: flex;
             flex-direction: column;
             height: 600px;
+            min-height: 400px;
+        }
+        
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 70vh;
+                min-height: 300px;
+            }
         }
 
         .chat-header {
@@ -181,20 +217,87 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            background: #fafbff;
+            background: #fafafa;
         }
 
         .message {
-            white-space: pre-line;
             font-size: 1.08rem;
-            margin-bottom: 8px; /* réduit l'espace entre les messages */
+            margin-bottom: 12px;
             word-break: break-word;
-            max-width: 80%;
-            padding: 15px;
+            max-width: 85%;
+            padding: 16px 20px;
             border-radius: 18px;
-            line-height: 1.6; /* légèrement augmenté pour les formules */
+            line-height: 1.7;
             animation: fadeIn 0.3s ease;
             position: relative;
+        }
+        
+        @media (max-width: 768px) {
+            .message {
+                max-width: 95%;
+                padding: 12px 16px;
+                font-size: 1rem;
+            }
+        }
+        
+        /* Styles pour le formatage Markdown */
+        .message h1, .message h2, .message h3 {
+            font-weight: bold;
+            margin: 16px 0 12px 0;
+            color: var(--primary-color);
+            line-height: 1.3;
+        }
+        
+        .message h1 {
+            font-size: 1.5em;
+            text-decoration: underline;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 6px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .message h2 {
+            font-size: 1.3em;
+            text-decoration: underline;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .message h3 {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+        
+        .message strong {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .message em {
+            font-style: italic;
+            color: #666;
+        }
+        
+        .message ul, .message ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .message li {
+            margin: 4px 0;
+        }
+        
+        .message code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
         }
 
         @keyframes fadeIn {
@@ -210,9 +313,10 @@
         }
 
         .ai-message {
-            background-color: #eef2ff;
+            background-color: #f9fafb;
             align-self: flex-start;
             border-bottom-left-radius: 5px;
+            border-left: 3px solid var(--primary-color);
         }
 
         .message-info {
@@ -292,15 +396,72 @@
             vertical-align: middle;
         }
 
+        /* Styles pour MathJax */
         .message mjx-container {
-            font-size: 1.15em;
-            background: none;
-            padding: 0;
-            margin: 0;
+            font-size: 1.15em !important;
+            background: none !important;
+            padding: 2px 4px !important;
+            margin: 2px 0 !important;
+            display: inline-block !important;
+        }
+        
+        .message mjx-container[display="true"] {
+            display: block !important;
+            text-align: center !important;
+            margin: 12px 0 !important;
+            padding: 8px 0 !important;
+        }
+        
+        .message .MathJax {
+            font-size: 1.1em !important;
+        }
+        
+        /* Amélioration de la lisibilité des formules */
+        .ai-message mjx-container {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 4px !important;
+            border: 1px solid #e5e7eb !important;
         }
 
         .message p {
-            margin: 0 0 4px 0; /* réduit l'espace entre paragraphes */
+            margin: 0 0 12px 0;
+            text-align: justify;
+        }
+        
+        .message p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .message br {
+            line-height: 1.4;
+        }
+        
+        /* Espacement amélioré */
+        .message ul {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+        
+        .message li {
+            margin: 6px 0;
+            line-height: 1.5;
+        }
+        
+        .message strong {
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+        
+        .message em {
+            font-style: italic;
+            color: #555;
+        }
+        
+        /* Amélioration des paragraphes après titres */
+        .message h1 + p,
+        .message h2 + p,
+        .message h3 + p {
+            margin-top: 8px;
         }
     </style>
 </head>
@@ -682,9 +843,9 @@
                 // Message envoyé à l'API (avec instructions adaptées selon la matière)
                 let instructions = "";
                 if (subject.includes('mathematiques') || subject.includes('physique_chimie') || subject === 'enseignement_scientifique') {
-                    instructions = "IMPORTANT: Utilise la syntaxe LaTeX pour les mathématiques: $formule$ pour les formules en ligne, $$formule$$ pour les formules en bloc.";
+                    instructions = "IMPORTANT: Utilise UNIQUEMENT la syntaxe LaTeX correcte pour les mathématiques: $a_n$ pour les indices, $a^n$ pour les exposants, $a_{n+1}$ pour les indices composés. Utilise $$formule$$ pour les formules en bloc centrées. Évite les caractères spéciaux corrompus. Structure avec des titres (**Titre**) et listes (* item).";
                 } else {
-                    instructions = "Réponds de manière claire et structurée, adaptée au niveau scolaire.";
+                    instructions = "Réponds de manière claire et structurée, adaptée au niveau scolaire. Utilise des titres en gras (**Titre**), des listes à puces (* item), et de l'italique (_texte_) pour structurer ta réponse.";
                 }
                 apiMessage = `${userMessage} ${instructions}`;
                 
@@ -700,18 +861,21 @@
             
             function sendMessage() {
                 const message = userInput.value.trim();
-                
                 if (!message) return;
-                
+
+                // Ajoute la consigne LaTeX pour les réponses IA
+                let latexInstruction = "IMPORTANT: Utilise toujours la syntaxe LaTeX pour les symboles mathématiques ($...$ pour inline, $$...$$ pour bloc), pour que les formules soient parfaitement lisibles.";
+                let messageForAI = message + " " + latexInstruction;
+
                 // Ajouter le message à l'historique
-                conversationHistory.push({ role: "user", content: message });
-                
-                // Afficher le message de l'utilisateur
+                conversationHistory.push({ role: "user", content: messageForAI });
+
+                // Afficher le message de l'utilisateur (sans la consigne)
                 displayMessage(message, 'user');
-                
+
                 // Effacer le champ de saisie
                 userInput.value = '';
-                
+
                 // Appeler l'API
                 callAI();
             }
@@ -721,8 +885,8 @@
                 messageElement.classList.add('message');
                 messageElement.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
                 
-                // Traitement du message pour préserver les formules LaTeX
-                let processedMessage = message.replace(/\n/g, "<br>");
+                // Traitement avancé du message avec formatage Markdown
+                let processedMessage = formatMessage(message);
                 
                 messageElement.innerHTML = processedMessage;
 
@@ -743,6 +907,94 @@
                         });
                     }
                 }, 100);
+            }
+            
+            function formatMessage(message) {
+                // Corriger d'abord les problèmes d'encodage et LATEXBLOCK
+                let processedMessage = message
+                    // Corriger les accents corrompus
+                    .replace(/spcialit/g, 'spécialité')
+                    .replace(/mathmatiques/g, 'mathématiques')
+                    .replace(/Dfinitions/g, 'Définitions')
+                    .replace(/polynme/g, 'polynôme')
+                    .replace(/Proprits/g, 'Propriétés')
+                    .replace(/drivable/g, 'dérivable')
+                    .replace(/drive/g, 'dérivée')
+                    .replace(/cls/g, 'clés')
+                    .replace(/expliqus/g, 'expliqués')
+                    .replace(/rels/g, 'réels')
+                    // Supprimer les références LATEXBLOCK corrompues
+                    .replace(/_?LATEXBLOCK\d+_?/g, '')
+                    .replace(/où\s+et\s+\./g, '.')
+                    .replace(/où\s+\./g, '.')
+                    .replace(/\s+\./g, '.')
+                    // Nettoyer les phrases cassées
+                    .replace(/une fonction du type\s*,/g, 'une fonction')
+                    .replace(/sont des\s*et\s*\./g, 'sont des polynômes.')
+                    .replace(/\s+sont des\s*\./g, ' sont définis.')
+                    // Corriger les espaces multiples
+                    .replace(/\s{2,}/g, ' ')
+                    .replace(/\n{3,}/g, '\n\n');
+                
+                // Protéger les vraies formules LaTeX restantes
+                let latexBlocks = [];
+                processedMessage = processedMessage.replace(/(\$\$[\s\S]+?\$\$|\$[^$]+\$)/g, function(match) {
+                    latexBlocks.push(match);
+                    return `__LATEX_BLOCK_${latexBlocks.length - 1}__`;
+                });
+                
+                // Traitement Markdown avancé
+                processedMessage = processedMessage
+                    // Grands titres
+                    .replace(/^#{1,2}\s+(.+)$/gm, '<h1>$1</h1>')
+                    // Titres moyens
+                    .replace(/^\*\*([^*\n]+)\*\*\s*:?\s*$/gm, '<h2>$1</h2>')
+                    // Sous-titres avec deux-points
+                    .replace(/^([A-ZÀ-ÿ][^<>\n]*?)\s*:\s*$/gm, '<h3>$1</h3>')
+                    // Gras
+                    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>')
+                    // Italique (protéger les underscores dans les mots)
+                    .replace(/(?<!\w)_([^_\n]+)_(?!\w)/g, '<em>$1</em>')
+                    // Listes à puces
+                    .replace(/^[+*-]\s+(.+)$/gm, '<li>$1</li>')
+                    // Code inline
+                    .replace(/`([^`]+)`/g, '<code>$1</code>');
+                
+                // Convertir sauts de ligne
+                processedMessage = processedMessage
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br>');
+                
+                // Envelopper dans paragraphes
+                if (!processedMessage.startsWith('<h') && !processedMessage.startsWith('<p>')) {
+                    processedMessage = '<p>' + processedMessage + '</p>';
+                }
+                
+                // Traitement des listes
+                processedMessage = processedMessage.replace(/(<li>.*?<\/li>)/gs, '<ul>$1</ul>');
+                
+                // Nettoyage final
+                processedMessage = processedMessage
+                    .replace(/<\/ul>(<br>)*<ul>/g, '')
+                    .replace(/<br><\/p>/g, '</p>')
+                    .replace(/<p><br>/g, '<p>')
+                    .replace(/<br>(<h[123]>)/g, '$1')
+                    .replace(/(<\/h[123]>)<br>/g, '$1')
+                    .replace(/<p><\/p>/g, '')
+                    .replace(/<p>\s*<\/p>/g, '')
+                    // Nettoyer autour des formules LaTeX
+                    .replace(/<br>\$\$/g, '$$')
+                    .replace(/\$\$<br>/g, '$$')
+                    .replace(/<br>\$/g, '$')
+                    .replace(/\$<br>/g, '$');
+                
+                // Restaurer les blocs LaTeX
+                processedMessage = processedMessage.replace(/__LATEX_BLOCK_(\d+)__/g, function(_, i) {
+                    return latexBlocks[i] || '';
+                });
+
+                return processedMessage;
             }
             
             async function callAI() {
