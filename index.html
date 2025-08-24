@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistant Scolaire - Ollama</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #7209b7;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --border-radius: 12px;
+            --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .tagline {
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #edf7ff;
+            border-radius: var(--border-radius);
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-text {
+            font-weight: 500;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .form-title {
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        button {
+            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: var(--transition);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button i {
+            margin-right: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .chat-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .chat-header {
+            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            background: #fafbff;
+        }
+
+        .message {
+            white-space: pre-line;
+            font-size: 1.08rem;
+            margin-bottom: 8px; /* réduit l'espace entre les messages */
+            word-break: break-word;
+            max-width: 80%;
+            padding: 15px;
+            border-radius: 18px;
+            line-height: 1.6; /* légèrement augmenté pour les formules */
+            animation: fadeIn 0.3s ease;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background-color: var(--primary-color);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai-message {
+            background-color: #eef2ff;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-info {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            padding: 15px;
+            border-top: 2px solid #e2e8f0;
+            background: white;
+        }
+
+        .chat-input {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        #user-input {
+            padding: 14px;
+            width: 100%;
+        }
+
+        #send-btn {
+            width: auto;
+            padding: 14px 20px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 15px;
+        }
+
+        .loading-dots {
+            display: inline-flex;
+            align-items: center;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: bounce 1.5s infinite;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
+        .subject-icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .message mjx-container {
+            font-size: 1.15em;
+            background: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .message p {
+            margin: 0 0 4px 0; /* réduit l'espace entre paragraphes */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-graduation-cap"></i> Assistant Scolaire</h1>
+            <p class="tagline">Obtenez de l'aide dans vos matières scolaires grâce à l'IA Ollama</p>
+            <div class="status-bar" id="status-bar">
+                <div class="status-indicator" id="status-indicator"></div>
+                <div class="status-text" id="status-text">Vérification de la connexion...</div>
+            </div>
+            
+            <div class="api-selection" id="api-selection" style="display: none; margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: var(--border-radius); border: 1px solid #ffeaa7;">
+                <h4 style="color: #856404; margin-bottom: 10px;"><i class="fas fa-exclamation-triangle"></i> Ollama non détecté</h4>
+                <p style="color: #856404; margin-bottom: 10px;">Choisissez une option pour continuer :</p>
+                <p style="color: #856404; margin-bottom: 15px; font-size: 0.9em;"><i class="fas fa-info-circle"></i> <strong>Astuce :</strong> Pour utiliser Ollama, servez ce fichier via un serveur web local ou GitHub Pages.</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                    <button id="use-groq" style="width: auto; padding: 12px 20px; font-size: 16px; background: #ff6b35;">
+                        <i class="fas fa-rocket"></i> Llama 3 (Groq)
+                    </button>
+                </div>
+                <div id="openai-config" style="display: none; margin-top: 15px;">
+                    <input type="password" id="openai-key" placeholder="Votre clé API OpenAI" style="margin-bottom: 10px;">
+                    <button id="save-key" style="width: auto; padding: 8px 15px; font-size: 14px;">
+                        <i class="fas fa-save"></i> Sauvegarder
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="form-container">
+                <h2 class="form-title"><i class="fas fa-cog"></i> Configuration</h2>
+                <div class="form-group">
+                    <label for="level"><i class="fas fa-graduation-cap subject-icon"></i> Niveau scolaire</label>
+                    <select id="level">
+                        <option value="">Sélectionnez votre niveau</option>
+                        <option value="6eme">6ème</option>
+                        <option value="5eme">5ème</option>
+                        <option value="4eme">4ème</option>
+                        <option value="3eme">3ème</option>
+                        <option value="seconde">Seconde</option>
+                        <option value="premiere">Première</option>
+                        <option value="terminale">Terminale</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subject"><i class="fas fa-book subject-icon"></i> Matière scolaire</label>
+                    <select id="subject" disabled>
+                        <option value="">Sélectionnez d'abord votre niveau</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="chapter"><i class="fas fa-file-alt subject-icon"></i> Chapitre</label>
+                    <input type="text" id="chapter" placeholder="Ex: Révolution française, Fonctions exponentielles...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="option"><i class="fas fa-hands-helping subject-icon"></i> Type d'aide</label>
+                    <select id="option">
+                        <option value="">Sélectionnez une option</option>
+                        <option value="comprendre">Comprendre le chapitre</option>
+                        <option value="devoir">Aide aux devoirs</option>
+                        <option value="exercice">Exercices supplémentaires</option>
+                        <option value="revision">Révision et synthèse</option>
+                        <option value="explication">Explication détaillée</option>
+                    </select>
+                </div>
+                
+                <button id="start-btn">
+                    <i class="fas fa-comments"></i> Démarrer la conversation
+                </button>
+            </div>
+            
+            <div class="chat-container" id="chat-container">
+                <div class="chat-header">
+                    <h2 id="chat-title"><i class="fas fa-comment-dots"></i> Discussion</h2>
+                </div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message ai-message">
+                        Bonjour ! Je suis votre assistant scolaire. Veuillez sélectionner une matière, un chapitre et le type d'aide dont vous avez besoin pour commencer.
+                        <div class="message-info">Assistant Ollama</div>
+                    </div>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="loading-dots">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span>Ollama réfléchit</span>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <div class="chat-input">
+                        <input type="text" id="user-input" placeholder="Posez votre question..." disabled>
+                    </div>
+                    <button id="send-btn" disabled><i class="fas fa-paper-plane"></i> Envoyer</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p id="footer-text">Assistant Scolaire - Llama 3</p>
+            <p style="font-size: 0.8rem; margin-top: 5px; opacity: 0.7;">Mode local (Ollama) | Cloud (Groq)</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const levelSelect = document.getElementById('level');
+            const subjectSelect = document.getElementById('subject');
+            const chapterInput = document.getElementById('chapter');
+            const optionSelect = document.getElementById('option');
+            const startBtn = document.getElementById('start-btn');
+            const chatContainer = document.getElementById('chat-container');
+            const chatMessages = document.getElementById('chat-messages');
+            const userInput = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
+            const loading = document.getElementById('loading');
+            const chatTitle = document.getElementById('chat-title');
+            
+            let conversationHistory = [];
+            let currentContext = {};
+            let apiMode = 'ollama'; // 'ollama', 'groq'
+            const groqKey = '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';
+            let openaiKey = localStorage.getItem('openai_key') || '';
+            
+            // Vérifier la disponibilité d'Ollama au chargement
+            checkOllamaAvailability();
+            
+            async function checkOllamaAvailability() {
+                const statusIndicator = document.getElementById('status-indicator');
+                const statusText = document.getElementById('status-text');
+                const apiSelection = document.getElementById('api-selection');
+                
+                // Vérifier si on est sur file:// (ouverture directe du fichier)
+                if (window.location.protocol === 'file:') {
+                    statusIndicator.style.backgroundColor = '#ffa500';
+                    statusText.textContent = 'Fichier ouvert directement - Ollama non accessible';
+                    apiSelection.style.display = 'block';
+                    
+                    // Activer automatiquement le mode démo si pas de clé OpenAI
+                    if (!openaiKey) {
+                        setTimeout(() => {
+                            apiMode = 'demo';
+                            statusText.textContent = 'Mode Démo activé automatiquement';
+                            statusIndicator.style.backgroundColor = '#28a745';
+                            apiSelection.style.display = 'none';
+                        }, 2000);
+                    }
+                    return;
+                }
+                
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+                    
+                    const response = await fetch('http://localhost:11434/api/tags', {
+                        method: 'GET',
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (response.ok) {
+                        statusIndicator.style.backgroundColor = 'var(--success-color)';
+                        statusText.textContent = 'Connecté à Ollama (local)';
+                        apiMode = 'ollama';
+                    } else {
+                        throw new Error('Ollama non accessible');
+                    }
+                } catch (error) {
+                    console.log('Ollama non détecté:', error.message);
+                    statusIndicator.style.backgroundColor = 'var(--warning-color)';
+                    statusText.textContent = 'Ollama non détecté';
+                    apiSelection.style.display = 'block';
+                    
+                    // Activer automatiquement Groq après 2 secondes
+                    setTimeout(() => {
+                        if (apiMode !== 'groq') {
+                            const groqBtn = document.getElementById('use-groq');
+                            groqBtn.style.background = '#28a745';
+                            groqBtn.innerHTML = '<i class="fas fa-rocket"></i> Essayer Llama 3 (Gratuit)';
+                        }
+                    }, 2000);
+                }
+            }
+            
+            // Gestion du bouton Groq
+            document.getElementById('use-groq').addEventListener('click', function() {
+                apiMode = 'groq';
+                document.getElementById('status-text').textContent = 'Llama 3 (Groq) activé';
+                document.getElementById('status-indicator').style.backgroundColor = '#ff6b35';
+                document.getElementById('api-selection').style.display = 'none';
+            });
+            
+            // Matières par niveau
+            const subjectsByLevel = {
+                '6eme': [
+                    {value: 'mathematiques', text: 'Mathématiques'},
+                    {value: 'francais', text: 'Français'},
+                    {value: 'histoire_geographie', text: 'Histoire-Géographie'},
+                    {value: 'anglais', text: 'Anglais'},
+                    {value: 'svt', text: 'SVT'},
+                    {value: 'technologie', text: 'Technologie'},
+                    {value: 'arts_plastiques', text: 'Arts plastiques'},
+                    {value: 'education_musicale', text: 'Éducation musicale'},
+                    {value: 'eps', text: 'EPS'}
+                ],
+                '5eme': [
+                    {value: 'mathematiques', text: 'Mathématiques'},
+                    {value: 'francais', text: 'Français'},
+                    {value: 'histoire_geographie', text: 'Histoire-Géographie'},
+                    {value: 'anglais', text: 'Anglais'},
+                    {value: 'svt', text: 'SVT'},
+                    {value: 'physique_chimie', text: 'Physique-Chimie'},
+                    {value: 'technologie', text: 'Technologie'},
+                    {value: 'arts_plastiques', text: 'Arts plastiques'},
+                    {value: 'education_musicale', text: 'Éducation musicale'},
+                    {value: 'eps', text: 'EPS'}
+                ],
+                '4eme': [
+                    {value: 'mathematiques', text: 'Mathématiques'},
+                    {value: 'francais', text: 'Français'},
+                    {value: 'histoire_geographie', text: 'Histoire-Géographie'},
+                    {value: 'anglais', text: 'Anglais'},
+                    {value: 'svt', text: 'SVT'},
+                    {value: 'physique_chimie', text: 'Physique-Chimie'},
+                    {value: 'technologie', text: 'Technologie'},
+                    {value: 'arts_plastiques', text: 'Arts plastiques'},
+                    {value: 'education_musicale', text: 'Éducation musicale'},
+                    {value: 'eps', text: 'EPS'}
+                ],
+                '3eme': [
+                    {value: 'mathematiques', text: 'Mathématiques'},
+                    {value: 'francais', text: 'Français'},
+                    {value: 'histoire_geographie', text: 'Histoire-Géographie'},
+                    {value: 'anglais', text: 'Anglais'},
+                    {value: 'svt', text: 'SVT'},
+                    {value: 'physique_chimie', text: 'Physique-Chimie'},
+                    {value: 'technologie', text: 'Technologie'},
+                    {value: 'arts_plastiques', text: 'Arts plastiques'},
+                    {value: 'education_musicale', text: 'Éducation musicale'},
+                    {value: 'eps', text: 'EPS'}
+                ],
+                'seconde': [
+                    {value: 'mathematiques', text: 'Mathématiques'},
+                    {value: 'francais', text: 'Français'},
+                    {value: 'histoire_geographie', text: 'Histoire-Géographie'},
+                    {value: 'anglais', text: 'Anglais'},
+                    {value: 'svt', text: 'SVT'},
+                    {value: 'physique_chimie', text: 'Physique-Chimie'},
+                    {value: 'ses', text: 'SES'},
+                    {value: 'eps', text: 'EPS'}
+                ],
+                'premiere': [
+                    {value: 'francais', text: 'Français'},
+                    {value: 'histoire_geographie', text: 'Histoire-Géographie'},
+                    {value: 'anglais', text: 'Anglais'},
+                    {value: 'enseignement_scientifique', text: 'Enseignement scientifique'},
+                    {value: 'eps', text: 'EPS'},
+                    {value: 'specialite_mathematiques', text: 'Spé. Mathématiques'},
+                    {value: 'specialite_physique_chimie', text: 'Spé. Physique-Chimie'},
+                    {value: 'specialite_svt', text: 'Spé. SVT'},
+                    {value: 'specialite_ses', text: 'Spé. SES'},
+                    {value: 'specialite_hggsp', text: 'Spé. HGGSP'},
+                    {value: 'specialite_hlp', text: 'Spé. HLP'},
+                    {value: 'specialite_llcer', text: 'Spé. LLCER'},
+                    {value: 'specialite_nsi', text: 'Spé. NSI'}
+                ],
+                'terminale': [
+                    {value: 'philosophie', text: 'Philosophie'},
+                    {value: 'histoire_geographie', text: 'Histoire-Géographie'},
+                    {value: 'anglais', text: 'Anglais'},
+                    {value: 'enseignement_scientifique', text: 'Enseignement scientifique'},
+                    {value: 'eps', text: 'EPS'},
+                    {value: 'specialite_mathematiques', text: 'Spé. Mathématiques'},
+                    {value: 'specialite_physique_chimie', text: 'Spé. Physique-Chimie'},
+                    {value: 'specialite_svt', text: 'Spé. SVT'},
+                    {value: 'specialite_ses', text: 'Spé. SES'},
+                    {value: 'specialite_hggsp', text: 'Spé. HGGSP'},
+                    {value: 'specialite_hlp', text: 'Spé. HLP'},
+                    {value: 'specialite_llcer', text: 'Spé. LLCER'},
+                    {value: 'specialite_nsi', text: 'Spé. NSI'}
+                ]
+            };
+            
+            // Gestion du changement de niveau
+            levelSelect.addEventListener('change', function() {
+                const selectedLevel = this.value;
+                subjectSelect.innerHTML = '<option value="">Sélectionnez une matière</option>';
+                
+                if (selectedLevel && subjectsByLevel[selectedLevel]) {
+                    subjectSelect.disabled = false;
+                    subjectsByLevel[selectedLevel].forEach(subject => {
+                        const option = document.createElement('option');
+                        option.value = subject.value;
+                        option.textContent = subject.text;
+                        subjectSelect.appendChild(option);
+                    });
+                } else {
+                    subjectSelect.disabled = true;
+                }
+            });
+            
+            // Démarrer la conversation
+            startBtn.addEventListener('click', function() {
+                const level = levelSelect.value;
+                const subject = subjectSelect.value;
+                const chapter = chapterInput.value.trim();
+                const option = optionSelect.value;
+                
+                if (!level || !subject || !chapter || !option) {
+                    alert('Veuillez remplir tous les champs');
+                    return;
+                }
+                
+                // Mettre à jour le contexte actuel
+                currentContext = {
+                    level,
+                    subject,
+                    chapter,
+                    option
+                };
+                
+                // Mettre à jour le titre du chat
+                const levelText = levelSelect.options[levelSelect.selectedIndex].text;
+                const subjectText = subjectSelect.options[subjectSelect.selectedIndex].text;
+                const optionText = optionSelect.options[optionSelect.selectedIndex].text;
+                chatTitle.textContent = `${levelText} - ${subjectText} - ${chapter}`;
+                
+                // Activer la zone de chat
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                
+                // Générer le premier message basé sur la sélection
+                generateInitialMessage(level, subject, chapter, option);
+            });
+            
+            // Envoyer un message
+            sendBtn.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            function generateInitialMessage(level, subject, chapter, option) {
+                let userMessage = "";
+                let apiMessage = "";
+
+                // Message affiché à l'utilisateur (sans les instructions LaTeX)
+                switch(option) {
+                    case 'comprendre':
+                        userMessage = `Peux-tu m'expliquer le chapitre "${chapter}" en ${subject} pour un niveau ${level} ? J'aimerais comprendre les concepts clés.`;
+                        break;
+                    case 'devoir':
+                        userMessage = `J'ai besoin d'aide pour un devoir sur le chapitre "${chapter}" en ${subject} (niveau ${level}).`;
+                        break;
+                    case 'exercice':
+                        userMessage = `Peux-tu me proposer des exercices supplémentaires sur le chapitre "${chapter}" en ${subject} pour un niveau ${level} ?`;
+                        break;
+                    case 'revision':
+                        userMessage = `J'aimerais réviser le chapitre "${chapter}" en ${subject} (niveau ${level}). Peux-tu me faire un résumé ?`;
+                        break;
+                    case 'explication':
+                        userMessage = `Pourrais-tu m'expliquer en détail le chapitre "${chapter}" en ${subject} pour un niveau ${level} ?`;
+                        break;
+                    default:
+                        userMessage = `J'aimerais discuter du chapitre "${chapter}" en ${subject} (niveau ${level}).`;
+                }
+                
+                // Message envoyé à l'API (avec instructions adaptées selon la matière)
+                let instructions = "";
+                if (subject.includes('mathematiques') || subject.includes('physique_chimie') || subject === 'enseignement_scientifique') {
+                    instructions = "IMPORTANT: Utilise la syntaxe LaTeX pour les mathématiques: $formule$ pour les formules en ligne, $$formule$$ pour les formules en bloc.";
+                } else {
+                    instructions = "Réponds de manière claire et structurée, adaptée au niveau scolaire.";
+                }
+                apiMessage = `${userMessage} ${instructions}`;
+                
+                // Ajouter le message complet à l'historique pour l'API
+                conversationHistory.push({ role: "user", content: apiMessage });
+                
+                // Afficher seulement le message utilisateur (sans les instructions)
+                displayMessage(userMessage, 'user');
+                
+                // Appeler l'API
+                callAI();
+            }
+            
+            function sendMessage() {
+                const message = userInput.value.trim();
+                
+                if (!message) return;
+                
+                // Ajouter le message à l'historique
+                conversationHistory.push({ role: "user", content: message });
+                
+                // Afficher le message de l'utilisateur
+                displayMessage(message, 'user');
+                
+                // Effacer le champ de saisie
+                userInput.value = '';
+                
+                // Appeler l'API
+                callAI();
+            }
+            
+            function displayMessage(message, sender) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+                messageElement.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+                
+                // Traitement du message pour préserver les formules LaTeX
+                let processedMessage = message.replace(/\n/g, "<br>");
+                
+                messageElement.innerHTML = processedMessage;
+
+                const messageInfo = document.createElement('div');
+                messageInfo.classList.add('message-info');
+                const assistantName = apiMode === 'groq' ? 'Llama 3 (Groq)' : 'Assistant Ollama';
+                messageInfo.textContent = sender === 'user' ? 'Vous' : assistantName;
+
+                messageElement.appendChild(messageInfo);
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Rendu MathJax avec gestion d'erreur
+                setTimeout(() => {
+                    if (window.MathJax && window.MathJax.typesetPromise) {
+                        window.MathJax.typesetPromise([messageElement]).catch((err) => {
+                            console.warn('Erreur MathJax:', err);
+                        });
+                    }
+                }, 100);
+            }
+            
+            async function callAI() {
+                loading.style.display = 'block';
+                
+                try {
+                    let response;
+                    
+                    if (apiMode === 'ollama') {
+                        response = await callOllama();
+                    } else if (apiMode === 'groq') {
+                        response = await callGroq();
+                    }
+                    
+                    if (response) {
+                        conversationHistory.push({ role: "assistant", content: response });
+                        displayMessage(response, 'ai');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erreur détaillée:', error);
+                    let errorMessage = "Désolé, je rencontre un problème technique.";
+                    
+                    if (error.message.includes('Groq')) {
+                        errorMessage = "Erreur avec Groq. Vérifiez votre connexion internet.";
+                    } else if (error.message.includes('Ollama')) {
+                        errorMessage = "Erreur avec Ollama. Vérifiez qu'il est bien démarré.";
+                    }
+                    
+                    conversationHistory.push({ role: "assistant", content: errorMessage });
+                    displayMessage(errorMessage, 'ai');
+                } finally {
+                    loading.style.display = 'none';
+                }
+            }
+            
+            async function callOllama() {
+                const messages = conversationHistory.map(msg => ({
+                    role: msg.role,
+                    content: msg.content
+                }));
+                
+                const response = await fetch('http://localhost:11434/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: "llama3.1",
+                        messages: messages,
+                        stream: false
+                    })
+                });
+                
+                if (!response.ok) throw new Error(`Erreur Ollama: ${response.status}`);
+                const data = await response.json();
+                return data.message.content;
+            }
+            
+
+            
+
+            
+
+            
+            async function callGroq() {
+                const messages = conversationHistory.map(msg => ({
+                    role: msg.role,
+                    content: msg.content
+                }));
+                
+                try {
+                    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${groqKey}`
+                        },
+                        body: JSON.stringify({
+                            model: 'llama3-8b-8192',
+                            messages: messages,
+                            max_tokens: 1000,
+                            temperature: 0.7
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.text();
+                        console.error('Erreur Groq:', errorData);
+                        throw new Error(`Erreur Groq (${response.status})`);
+                    }
+                    
+                    const data = await response.json();
+                    return data.choices[0].message.content;
+                } catch (error) {
+                    throw new Error(`Erreur Groq: ${error.message}`);
+                }
+            }
+        });
+    </script>
+    
+    <!-- Configuration MathJax AVANT le chargement -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: true,
+                processEnvironments: true,
+                packages: {'[+]': ['ams', 'newcommand', 'configmacros']}
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax est prêt');
+                    MathJax.startup.defaultReady();
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</body>
+</html>
