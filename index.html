@@ -209,6 +209,57 @@
             color: white;
             padding: 20px;
             text-align: center;
+            position: relative;
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: var(--transition);
+            width: auto;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .chat-only-mode header,
+        .chat-only-mode .form-container,
+        .chat-only-mode .footer {
+            display: none;
+        }
+
+        .chat-only-mode {
+            padding: 0;
+        }
+
+        .chat-only-mode .container {
+            max-width: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .chat-only-mode .main-content {
+            grid-template-columns: 1fr;
+            gap: 0;
+            margin: 0;
+        }
+
+        .chat-only-mode .chat-container {
+            height: 100vh;
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
         }
 
         .chat-messages {
@@ -542,6 +593,9 @@
             <div class="chat-container" id="chat-container">
                 <div class="chat-header">
                     <h2 id="chat-title"><i class="fas fa-comment-dots"></i> Discussion</h2>
+                    <button class="fullscreen-btn" id="fullscreen-btn" title="Mode plein écran">
+                        <i class="fas fa-expand"></i>
+                    </button>
                 </div>
                 
                 <div class="chat-messages" id="chat-messages">
@@ -662,6 +716,24 @@
                 document.getElementById('status-text').textContent = 'Llama 3 (Groq) activé';
                 document.getElementById('status-indicator').style.backgroundColor = '#ff6b35';
                 document.getElementById('api-selection').style.display = 'none';
+            });
+            
+            // Gestion du mode chat seul
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            let isChatOnly = false;
+            
+            fullscreenBtn.addEventListener('click', function() {
+                if (!isChatOnly) {
+                    document.body.classList.add('chat-only-mode');
+                    fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                    fullscreenBtn.title = 'Afficher tout';
+                    isChatOnly = true;
+                } else {
+                    document.body.classList.remove('chat-only-mode');
+                    fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                    fullscreenBtn.title = 'Mode discussion seule';
+                    isChatOnly = false;
+                }
             });
             
             // Matières par niveau
