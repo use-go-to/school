@@ -46,6 +46,103 @@
             background: white;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .dark-mode-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--light-color);
+            border: 2px solid #e2e8f0;
+            color: var(--secondary-color);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: var(--transition);
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dark-mode-btn:hover {
+            background: #e2e8f0;
+            transform: scale(1.1);
+        }
+
+        /* Mode sombre */
+        .dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e2e8f0;
+        }
+
+        .dark-mode header {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+
+        .dark-mode h1 {
+            color: #ff6b6b;
+        }
+
+        .dark-mode .tagline {
+            color: #e2e8f0;
+        }
+
+        .dark-mode .form-container {
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+
+        .dark-mode .chat-container {
+            background: #2d3748;
+        }
+
+        .dark-mode .chat-messages {
+            background: #1a202c;
+        }
+
+        .dark-mode .ai-message {
+            background: #374151;
+            border-left-color: var(--primary-color);
+        }
+
+        .dark-mode select,
+        .dark-mode input {
+            background: #374151;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+
+        .dark-mode select:focus,
+        .dark-mode input:focus {
+            border-color: #ff6b6b;
+        }
+
+        .dark-mode label {
+            color: #e2e8f0;
+        }
+
+        .dark-mode .form-title {
+            color: #e2e8f0;
+            border-bottom-color: #4a5568;
+        }
+
+        .dark-mode .status-bar {
+            background: #374151;
+        }
+
+        .dark-mode .dark-mode-btn {
+            background: #374151;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+
+        .dark-mode .dark-mode-btn:hover {
+            background: #4a5568;
         }
 
         h1 {
@@ -309,6 +406,12 @@
             color: var(--primary-color);
             line-height: 1.3;
         }
+
+        .dark-mode .message h1, 
+        .dark-mode .message h2, 
+        .dark-mode .message h3 {
+            color: #ff6b6b;
+        }
         
         .message h1 {
             font-size: 1.5em;
@@ -344,6 +447,14 @@
             font-style: italic;
             color: #666;
         }
+
+        .dark-mode .message strong {
+            color: #e2e8f0;
+        }
+        
+        .dark-mode .message em {
+            color: #cbd5e0;
+        }
         
         .message ul, .message ol {
             margin: 8px 0;
@@ -360,6 +471,12 @@
             border-radius: 4px;
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
+            color: #1f2937;
+        }
+
+        .dark-mode .message code {
+            background: #4a5568;
+            color: #e2e8f0;
         }
 
         @keyframes fadeIn {
@@ -483,6 +600,17 @@
             background-color: rgba(255, 255, 255, 0.9) !important;
             border-radius: 4px !important;
             border: 1px solid #e5e7eb !important;
+            color: #1f2937 !important;
+        }
+
+        .dark-mode .ai-message mjx-container {
+            background-color: rgba(45, 55, 72, 0.9) !important;
+            border: 1px solid #4a5568 !important;
+            color: #e2e8f0 !important;
+        }
+
+        .dark-mode .message mjx-container {
+            color: #e2e8f0 !important;
         }
 
         .message p {
@@ -530,6 +658,9 @@
 <body>
     <div class="container">
         <header>
+            <button class="dark-mode-btn" id="dark-mode-btn" title="Mode nuit">
+                <i class="fas fa-moon"></i>
+            </button>
             <h1><i class="fas fa-graduation-cap"></i> Assistant Scolaire</h1>
             <p class="tagline">Obtenez de l'aide dans vos matières scolaires grâce à l'IA Ollama</p>
             <div class="status-bar" id="status-bar">
@@ -744,6 +875,32 @@
                     fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
                     fullscreenBtn.title = 'Mode discussion seule';
                     isChatOnly = false;
+                }
+            });
+            
+            // Gestion du mode nuit
+            const darkModeBtn = document.getElementById('dark-mode-btn');
+            let isDarkMode = localStorage.getItem('darkMode') === 'true';
+            
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+                darkModeBtn.title = 'Mode jour';
+            }
+            
+            darkModeBtn.addEventListener('click', function() {
+                if (!isDarkMode) {
+                    document.body.classList.add('dark-mode');
+                    darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+                    darkModeBtn.title = 'Mode jour';
+                    localStorage.setItem('darkMode', 'true');
+                    isDarkMode = true;
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    darkModeBtn.innerHTML = '<i class="fas fa-moon"></i>';
+                    darkModeBtn.title = 'Mode nuit';
+                    localStorage.setItem('darkMode', 'false');
+                    isDarkMode = false;
                 }
             });
             
