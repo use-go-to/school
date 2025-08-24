@@ -27,7 +27,15 @@
         }
 
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.9) 8px, transparent 8px),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.7) 6px, transparent 6px),
+                radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.8) 7px, transparent 7px),
+                radial-gradient(circle at 90% 70%, rgba(255, 255, 255, 0.6) 5px, transparent 5px),
+                radial-gradient(circle at 10% 30%, rgba(255, 255, 255, 0.8) 9px, transparent 9px),
+                radial-gradient(circle at 60% 90%, rgba(255, 255, 255, 0.7) 6px, transparent 6px),
+                linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%);
+            background-size: 300px 300px, 250px 250px, 200px 200px, 280px 280px, 220px 220px, 260px 260px, 100% 100%;
             color: var(--dark-color);
             line-height: 1.6;
             min-height: 100vh;
@@ -43,10 +51,11 @@
             text-align: center;
             margin-bottom: 30px;
             padding: 20px;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             position: relative;
+            backdrop-filter: blur(10px);
         }
 
         .dark-mode-btn {
@@ -75,13 +84,22 @@
 
         /* Mode sombre */
         .dark-mode {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(100, 100, 150, 0.4) 8px, transparent 8px),
+                radial-gradient(circle at 80% 20%, rgba(150, 150, 200, 0.3) 6px, transparent 6px),
+                radial-gradient(circle at 40% 40%, rgba(120, 120, 180, 0.35) 7px, transparent 7px),
+                radial-gradient(circle at 90% 70%, rgba(140, 140, 190, 0.3) 5px, transparent 5px),
+                radial-gradient(circle at 10% 30%, rgba(110, 110, 170, 0.4) 9px, transparent 9px),
+                radial-gradient(circle at 60% 90%, rgba(130, 130, 180, 0.3) 6px, transparent 6px),
+                linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            background-size: 300px 300px, 250px 250px, 200px 200px, 280px 280px, 220px 220px, 260px 260px, 100% 100%;
             color: #e2e8f0;
         }
 
         .dark-mode header {
-            background: #2d3748;
+            background: rgba(45, 55, 72, 0.95);
             color: #e2e8f0;
+            backdrop-filter: blur(10px);
         }
 
         .dark-mode h1 {
@@ -93,21 +111,35 @@
         }
 
         .dark-mode .form-container {
-            background: #2d3748;
+            background: rgba(45, 55, 72, 0.95);
             color: #e2e8f0;
+            backdrop-filter: blur(10px);
         }
 
         .dark-mode .chat-container {
-            background: #2d3748;
+            background: rgba(45, 55, 72, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .dark-mode .chat-input-container {
+            background: rgba(45, 55, 72, 0.95);
+            color: #e2e8f0;
         }
 
         .dark-mode .chat-messages {
-            background: #1a202c;
+            background: 
+                radial-gradient(circle at 15% 25%, rgba(100, 100, 150, 0.2) 3px, transparent 3px),
+                radial-gradient(circle at 85% 75%, rgba(150, 150, 200, 0.15) 2px, transparent 2px),
+                radial-gradient(circle at 45% 60%, rgba(120, 120, 180, 0.12) 2.5px, transparent 2.5px),
+                radial-gradient(circle at 70% 30%, rgba(140, 140, 190, 0.1) 2px, transparent 2px),
+                linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            background-size: 150px 150px, 120px 120px, 100px 100px, 140px 140px, 100% 100%;
         }
 
         .dark-mode .ai-message {
             background: #374151;
             border-left-color: var(--primary-color);
+            color: #e2e8f0;
         }
 
         .dark-mode select,
@@ -133,6 +165,7 @@
 
         .dark-mode .status-bar {
             background: #374151;
+            color: #e2e8f0;
         }
 
         .dark-mode .dark-mode-btn {
@@ -162,8 +195,9 @@
             justify-content: center;
             margin-top: 15px;
             padding: 10px;
-            background: #edf7ff;
+            background: rgba(237, 247, 255, 0.9);
             border-radius: var(--border-radius);
+            color: var(--dark-color);
         }
 
         .status-indicator {
@@ -219,10 +253,11 @@
         }
 
         .form-container {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.95);
             padding: 25px;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
         }
 
         .form-title {
@@ -284,7 +319,7 @@
         }
 
         .chat-container {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.95);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             overflow: hidden;
@@ -292,6 +327,7 @@
             flex-direction: column;
             height: 600px;
             min-height: 400px;
+            backdrop-filter: blur(10px);
         }
         
         @media (max-width: 768px) {
@@ -376,7 +412,13 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            background: #fafafa;
+            background: 
+                radial-gradient(circle at 15% 25%, rgba(220, 38, 38, 0.1) 3px, transparent 3px),
+                radial-gradient(circle at 85% 75%, rgba(220, 38, 38, 0.08) 2px, transparent 2px),
+                radial-gradient(circle at 45% 60%, rgba(220, 38, 38, 0.06) 2.5px, transparent 2.5px),
+                radial-gradient(circle at 70% 30%, rgba(220, 38, 38, 0.05) 2px, transparent 2px),
+                linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            background-size: 150px 150px, 120px 120px, 100px 100px, 140px 140px, 100% 100%;
         }
 
         .message {
@@ -500,6 +542,7 @@
             align-self: flex-start;
             border-bottom-left-radius: 5px;
             border-left: 3px solid var(--primary-color);
+            color: var(--dark-color);
         }
 
         .message-info {
@@ -512,7 +555,7 @@
             display: flex;
             padding: 15px;
             border-top: 2px solid #e2e8f0;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .chat-input {
@@ -569,7 +612,7 @@
             text-align: center;
             margin-top: 30px;
             padding: 20px;
-            color: var(--secondary-color);
+            color: white;
             font-size: 0.9rem;
         }
 
