@@ -1061,6 +1061,9 @@
                             <button class="flashcard-btn" id="next-flashcard">
                                 Suivante <i class="fas fa-chevron-right"></i>
                             </button>
+                            <button class="flashcard-btn" id="new-flashcards" style="margin-left: 15px; background: #059669;">
+                                <i class="fas fa-refresh"></i> Nouvelles cartes
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1069,7 +1072,7 @@
         
         <div class="footer">
             <p id="footer-text">Assistant Scolaire - Llama 3</p>
-            <p style="font-size: 0.8rem; margin-top: 5px; opacity: 0.7;">Mode local (Ollama) | Cloud (Groq)</p>
+            <p style="font-size: 0.8rem; margin-top: 5px; opacity: 0.7;">Mode local (Ollama) | Cloud (Groq) | Site Web (Lecointre David)</p>
         </div>
     </div>
 
@@ -1124,6 +1127,7 @@
                     generating: 'Génération des flashcards...',
                     previous: 'Précédente',
                     next: 'Suivante',
+                    newCards: 'Nouvelles cartes',
                     welcomeMessage: 'Bonjour ! Je suis votre assistant scolaire. Veuillez sélectionner une matière, un chapitre et le type d\'aide dont vous avez besoin pour commencer.',
                     assistantName: 'Assistant Ollama'
                 },
@@ -1155,6 +1159,7 @@
                     generating: 'Generating flashcards...',
                     previous: 'Previous',
                     next: 'Next',
+                    newCards: 'New cards',
                     welcomeMessage: 'Hello! I am your school assistant. Please select a subject, a chapter and the type of help you need to get started.',
                     assistantName: 'Ollama Assistant'
                 }
@@ -1198,6 +1203,7 @@
                 // Flashcards
                 document.querySelector('#prev-flashcard').innerHTML = `<i class="fas fa-chevron-left"></i> ${t.previous}`;
                 document.querySelector('#next-flashcard').innerHTML = `${t.next} <i class="fas fa-chevron-right"></i>`;
+                document.querySelector('#new-flashcards').innerHTML = `<i class="fas fa-refresh"></i> ${t.newCards}`;
                 
                 // Message d'accueil
                 const welcomeMsg = document.querySelector('.ai-message');
@@ -1399,25 +1405,27 @@
             const refreshBtn = document.getElementById('refresh-btn');
             
             refreshBtn.addEventListener('click', function() {
+                const t = translations[currentLanguage];
+                
                 // Vider l'historique de conversation
                 conversationHistory = [];
                 
                 // Vider les messages du chat
-                chatMessages.innerHTML = '<div class="message ai-message">Bonjour ! Je suis votre assistant scolaire. Veuillez sélectionner une matière, un chapitre et le type d\'aide dont vous avez besoin pour commencer.<div class="message-info">Assistant Ollama</div></div>';
+                chatMessages.innerHTML = `<div class="message ai-message">${t.welcomeMessage}<div class="message-info">${t.assistantName}</div></div>`;
                 
                 // Désactiver les champs de saisie
                 userInput.disabled = true;
                 sendBtn.disabled = true;
                 userInput.value = '';
                 
-                // Réinitialiser les flashcards
+                // Réinitialiser les flashcards avec message de chargement
                 flashcards = [];
                 currentFlashcardIndex = 0;
                 flashcardsGenerated = false;
                 document.getElementById('flashcard-loading').style.display = 'block';
                 document.getElementById('flashcard').style.display = 'none';
                 document.getElementById('flashcard-nav').style.display = 'none';
-                document.getElementById('flashcard-loading').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération des flashcards...';
+                document.getElementById('flashcard-loading').innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t.generating}`;
                 
                 // Revenir à l'onglet discussion
                 chatTab.classList.add('active');
@@ -1467,10 +1475,11 @@
                 if (!flashcardsGenerated && currentContext && currentContext.subject && currentContext.chapter) {
                     generateFlashcards();
                 } else if (!currentContext || !currentContext.subject || !currentContext.chapter) {
-                    // Afficher un message si pas de contexte
+                    // Garder le message de chargement jusqu'à nouvelle conversation
                     const loadingElement = document.getElementById('flashcard-loading');
+                    const t = translations[currentLanguage];
                     if (loadingElement) {
-                        loadingElement.innerHTML = '<i class="fas fa-info-circle"></i> Veuillez d\'abord démarrer une conversation pour générer les flashcards.';
+                        loadingElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t.generating}`;
                         loadingElement.style.display = 'block';
                         document.getElementById('flashcard').style.display = 'none';
                         document.getElementById('flashcard-nav').style.display = 'none';
@@ -1563,36 +1572,7 @@
                 }
             });
             
-            function fixLatexErrors(content) {
-                return content
-                    // Corriger les commandes LaTeX mal formées
-                    .replace(/\brac\{/g, '\\frac{')
-                    .replace(/\bsqrt\{/g, '\\sqrt{')
-                    .replace(/\bpm\b/g, '\\pm')
-                    .replace(/\bDelta\b/g, '\\Delta')
-                    .replace(/\bpropto\b/g, '\\propto')
-                    // Corriger cdot mal formé
-                    .replace(/\bcdot\b/g, '\\cdot')
-                    .replace(/c\s*d\s{o\s*t/g, '\\cdot')
-                    // Corriger les multiplications
-                    .replace(/(\d+)\s*c\s*d\s*o\s*tb\s*(\d+)/g, '$1 \\cdot $2')
-                    .replace(/(\w)\s*c\s*d\s*o\s*t\s*(\w)/g, '$1 \\cdot $2')
-                    // Nettoyer les formules communes
-                    .replace(/3\^2 - 4 c d o t 1 c d o t 2/g, '3^2 - 4 \\cdot 1 \\cdot 2')
-                    .replace(/b\^2 - 4 a c/g, 'b^2 - 4ac')
-                    // Correction des intégrales
-                    .replace(/\bint\b/g, '\\int')
-                    // Correction des vecteurs : "vec F" => "\vec{F}"
-                    .replace(/vec\s*([A-Za-z])/g, '\\vec{$1}')
-                    // Correction des vecteurs dans dvec
-                    .replace(/dvec\s*([A-Za-z])/g, 'd\\vec{$1}')
-                    // Correction des formules de travail
-                    .replace(/\$W\s*=\s*\\int\s*\\vec\{F\}\s*\\cdot\s*d\\vec\{r\}\$/g, '$W = \\int \\vec{F} \\cdot d\\vec{r}$')
-                    // Ajouter des espaces autour des formules mathématiques
-                    .replace(/(\w)\$([^$]+)\$/g, '$1 $$$2$$')
-                    .replace(/\$([^$]+)\$(\w)/g, '$$$1$$ $2')
-                    .replace(/(\w)\$([^$]+)\$(\w)/g, '$1 $$$2$$ $3');
-            }
+
             
             function fixLatexInJsonString(jsonStr) {
                 // Corrige les commandes LaTeX mal formées dans tout le JSON
@@ -1616,11 +1596,9 @@
                     const answerElement = document.getElementById('flashcard-answer');
                     const flashcardEl = document.getElementById('flashcard');
 
-                    // Corrige les erreurs LaTeX et formate
-                    const fixedQuestion = fixLatexErrors(flashcard.question);
-                    const fixedAnswer = fixLatexErrors(flashcard.answer);
-                    const formattedQuestion = formatMessage(fixedQuestion);
-                    const formattedAnswer = formatMessage(fixedAnswer);
+                    // UTILISER EXACTEMENT LA MÊME MÉTHODE QUE displayMessage()
+                    const formattedQuestion = formatMessage(flashcard.question);
+                    const formattedAnswer = formatMessage(flashcard.answer);
 
                     questionElement.innerHTML = formattedQuestion;
                     answerElement.innerHTML = formattedAnswer;
@@ -1630,7 +1608,7 @@
                     flashcardEl.classList.remove('flipped');
                     answerElement.style.visibility = 'hidden';
 
-                    // Rendu MathJax sur question et réponse
+                    // MÊME RENDU MathJax QUE displayMessage()
                     setTimeout(() => {
                         if (window.MathJax && window.MathJax.typesetPromise) {
                             window.MathJax.typesetPromise([questionElement, answerElement]).catch((err) => {
@@ -1655,16 +1633,50 @@
                         'Crée exactement 10 flashcards EN FRANÇAIS' : 
                         'Create exactly 10 flashcards IN ENGLISH';
                     
-                    const prompt = `${langInstruction} pour le chapitre "${currentContext.chapter}" en ${currentContext.subject} niveau ${currentContext.level}. Réponds UNIQUEMENT avec un tableau JSON valide :
-[{"question": "Question 1", "answer": "Réponse 1"}, {"question": "Question 2", "answer": "Réponse 2"}]
-CRITIQUE - Syntaxe LaTeX OBLIGATOIRE :
-- CORRECT: $E_k = \\frac{1}{2}mv^2$ (avec backslash double pour frac)
-- INCORRECT: "E_k = rac{1}{2}mv^2" (sans backslash)
-- CORRECT: $F = ma$ (formule simple)
-- CORRECT: $\\Delta = b^2 - 4ac$ (discriminant)
-- TOUJOURS utiliser \\frac{numerateur}{denominateur} pour les fractions
-- TOUJOURS encadrer TOUTES les mathématiques avec $...$
-JSON valide uniquement, aucun texte supplémentaire.`;
+                    let mathInstructions = '';
+                    if (currentContext.subject.includes('mathematiques') || currentContext.subject.includes('physique') || currentContext.subject.includes('scientifique')) {
+                        mathInstructions = `
+
+Pour les formules mathematiques :
+- Utilise des formules simples
+- Encadre avec $ comme : $f(x) = ax + b$
+- Evite les caracteres speciaux complexes`;
+                    }
+                    
+                    // Générer un seed aléatoire pour varier les flashcards
+                    const randomSeed = Math.floor(Math.random() * 1000);
+                    const randomPrompts = [
+                        "Varie les angles d'approche et les formulations.",
+                        "Explore différents aspects du chapitre.",
+                        "Concentre-toi sur des détails spécifiques.",
+                        "Aborde les applications concrètes.",
+                        "Focus sur les difficultés d'apprentissage."
+                    ];
+                    const randomHint = randomPrompts[randomSeed % randomPrompts.length];
+                    
+                    const isMathSubject = currentContext.subject.includes('mathematiques') || currentContext.subject.includes('physique') || currentContext.subject.includes('scientifique');
+                    
+                    const prompt = `Tu es un expert pédagogue. ${langInstruction} pour le chapitre "${currentContext.chapter}" en ${currentContext.subject} niveau ${currentContext.level}.${mathInstructions}
+
+Crée EXACTEMENT 10 flashcards variées (seed: ${randomSeed}):
+${randomHint}
+
+Types de questions adaptés à ${currentContext.subject} :
+${isMathSubject ? 
+    '- Definitions mathematiques\n- Formules et equations\n- Methodes de calcul\n- Proprietes importantes\n- Applications numeriques' :
+    '- Definitions et concepts\n- Dates et chronologie\n- Personnages et acteurs\n- Causes et consequences\n- Contexte historique/geographique'
+}
+
+Format JSON strict :
+[{"question": "${isMathSubject ? 'Quelle est la definition de...' : 'Que signifie...'}", "answer": "${isMathSubject ? 'Cela se definit par...' : 'Cela signifie...'}"}]
+
+Regles IMPORTANTES :
+- JSON valide uniquement
+- Questions precises sur ${currentContext.chapter}
+- Reponses courtes et claires
+- ${isMathSubject ? 'Formules en LaTeX avec $...$' : 'PAS de formules mathematiques'}
+- Exactement 10 flashcards
+- Contenu adapte au niveau ${currentContext.level}`;
 
                     let response;
                     if (apiMode === 'ollama') {
@@ -1673,43 +1685,44 @@ JSON valide uniquement, aucun texte supplémentaire.`;
                         response = await callGroqForFlashcards(prompt);
                     }
 
-                    // Nettoyer la réponse
                     let cleanResponse = response.trim();
                     const jsonMatch = cleanResponse.match(/\[.*\]/s);
                     if (jsonMatch) {
                         cleanResponse = jsonMatch[0];
                     }
 
-                    // Nettoyer les caractères problématiques pour JSON
+                    // Nettoyage JSON minimal
                     cleanResponse = cleanResponse
+                        .replace(/\(\s*"question":/g, '{"question":')
+                        .replace(/\}\s*\)/g, '}}')
+                        .replace(/\),\s*\(/g, '}, {')
+                        .replace(/^\[\(/g, '[{')
+                        .replace(/\)\]$/g, '}]')
                         .replace(/\\n/g, ' ')
                         .replace(/\\t/g, ' ')
-                        .replace(/\\r/g, ' ')
-                        .replace(/\\'/g, "'")
-                        .replace(/\\{2,}/g, '\\')
-                        .replace(/\\(?!["'\\nrtbf\/])/g, '')
                         .replace(/\s+/g, ' ')
                         .replace(/,\s*}/g, '}')
                         .replace(/,\s*]/g, ']');
 
-                    // Correction LaTeX sur tout le JSON avant parsing
-                    cleanResponse = fixLatexInJsonString(cleanResponse);
-
-                    console.log('Réponse nettoyée:', cleanResponse);
-
                     try {
                         flashcards = JSON.parse(cleanResponse);
+                        
+                        if (!Array.isArray(flashcards)) {
+                            throw new Error('Format invalide');
+                        }
+                        
+                        // Si moins de 10, relancer la génération
+                        if (flashcards.length < 10) {
+                            throw new Error('Pas assez de flashcards générées');
+                        }
+                        
+                        if (flashcards.length > 10) {
+                            flashcards = flashcards.slice(0, 10);
+                        }
+                        
                     } catch (parseError) {
-                        console.warn('Erreur JSON, tentative de réparation:', parseError);
-                        // Tentative de réparation basique
-                        cleanResponse = cleanResponse
-                            .replace(/([^\\])\\([^"'\\nrtbf\/])/g, '$1$2')
-                            .replace(/\\\\/g, '/');
-                        flashcards = JSON.parse(cleanResponse);
-                    }
-
-                    if (!Array.isArray(flashcards) || flashcards.length === 0) {
-                        throw new Error('Format de flashcards invalide');
+                        console.error('Impossible de générer les flashcards:', parseError);
+                        throw new Error('Génération échouée');
                     }
 
                     currentFlashcardIndex = 0;
@@ -1734,7 +1747,12 @@ JSON valide uniquement, aucun texte supplémentaire.`;
                     body: JSON.stringify({
                         model: "llama3.1",
                         messages: [{ role: "user", content: prompt }],
-                        stream: false
+                        stream: false,
+                        options: {
+                            temperature: 0.9,
+                            top_p: 0.9,
+                            seed: Math.floor(Math.random() * 10000)
+                        }
                     })
                 });
                 
@@ -1754,7 +1772,9 @@ JSON valide uniquement, aucun texte supplémentaire.`;
                         model: 'llama3-8b-8192',
                         messages: [{ role: "user", content: prompt }],
                         max_tokens: 2000,
-                        temperature: 0.7
+                        temperature: 0.9,
+                        top_p: 0.9,
+                        seed: Math.floor(Math.random() * 10000)
                     })
                 });
                 
@@ -1831,6 +1851,18 @@ JSON valide uniquement, aucun texte supplémentaire.`;
                 if (flashcardTab.classList.contains('active')) {
                     generateFlashcards();
                 }
+                
+                // Gestion du bouton nouvelles flashcards
+                const newFlashcardsBtn = document.getElementById('new-flashcards');
+                newFlashcardsBtn.addEventListener('click', function() {
+                    if (currentContext && currentContext.subject && currentContext.chapter) {
+                        // Réinitialiser complètement
+                        flashcards = [];
+                        currentFlashcardIndex = 0;
+                        flashcardsGenerated = false;
+                        generateFlashcards();
+                    }
+                });
             });
             
             // Envoyer un message
