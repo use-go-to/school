@@ -1061,9 +1061,6 @@
                             <button class="flashcard-btn" id="next-flashcard">
                                 Suivante <i class="fas fa-chevron-right"></i>
                             </button>
-                            <button class="flashcard-btn" id="new-flashcards" style="margin-left: 15px; background: #059669;">
-                                <i class="fas fa-refresh"></i> Nouvelles cartes
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -1127,7 +1124,6 @@
                     generating: 'Génération des flashcards...',
                     previous: 'Précédente',
                     next: 'Suivante',
-                    newCards: 'Nouvelles cartes',
                     welcomeMessage: 'Bonjour ! Je suis votre assistant scolaire. Veuillez sélectionner une matière, un chapitre et le type d\'aide dont vous avez besoin pour commencer.',
                     assistantName: 'Assistant Ollama'
                 },
@@ -1159,7 +1155,6 @@
                     generating: 'Generating flashcards...',
                     previous: 'Previous',
                     next: 'Next',
-                    newCards: 'New cards',
                     welcomeMessage: 'Hello! I am your school assistant. Please select a subject, a chapter and the type of help you need to get started.',
                     assistantName: 'Ollama Assistant'
                 }
@@ -1203,7 +1198,6 @@
                 // Flashcards
                 document.querySelector('#prev-flashcard').innerHTML = `<i class="fas fa-chevron-left"></i> ${t.previous}`;
                 document.querySelector('#next-flashcard').innerHTML = `${t.next} <i class="fas fa-chevron-right"></i>`;
-                document.querySelector('#new-flashcards').innerHTML = `<i class="fas fa-refresh"></i> ${t.newCards}`;
                 
                 // Message d'accueil
                 const welcomeMsg = document.querySelector('.ai-message');
@@ -1630,8 +1624,8 @@
                 
                 try {
                     const langInstruction = currentLanguage === 'fr' ? 
-                        'Crée exactement 10 flashcards EN FRANÇAIS' : 
-                        'Create exactly 10 flashcards IN ENGLISH';
+                        'Crée exactement 50 flashcards EN FRANÇAIS' : 
+                        'Create exactly 50 flashcards IN ENGLISH';
                     
                     let mathInstructions = '';
                     if (currentContext.subject.includes('mathematiques') || currentContext.subject.includes('physique') || currentContext.subject.includes('scientifique')) {
@@ -1656,9 +1650,11 @@ Pour les formules mathematiques :
                     
                     const isMathSubject = currentContext.subject.includes('mathematiques') || currentContext.subject.includes('physique') || currentContext.subject.includes('scientifique');
                     
-                    const prompt = `Tu es un expert pédagogue. ${langInstruction} pour le chapitre "${currentContext.chapter}" en ${currentContext.subject} niveau ${currentContext.level}.${mathInstructions}
+                    const prompt = `IMPORTANT: Réponds UNIQUEMENT avec un JSON valide, sans texte avant ou après.
 
-Crée EXACTEMENT 10 flashcards variées (seed: ${randomSeed}):
+${langInstruction} pour le chapitre "${currentContext.chapter}" en ${currentContext.subject} niveau ${currentContext.level}.${mathInstructions}
+
+Crée EXACTEMENT 50 flashcards variées (seed: ${randomSeed}):
 ${randomHint}
 
 Types de questions adaptés à ${currentContext.subject} :
@@ -1667,15 +1663,15 @@ ${isMathSubject ?
     '- Definitions et concepts\n- Dates et chronologie\n- Personnages et acteurs\n- Causes et consequences\n- Contexte historique/geographique'
 }
 
-Format JSON strict :
+Format JSON strict (AUCUN autre texte) :
 [{"question": "${isMathSubject ? 'Quelle est la definition de...' : 'Que signifie...'}", "answer": "${isMathSubject ? 'Cela se definit par...' : 'Cela signifie...'}"}]
 
 Regles IMPORTANTES :
-- JSON valide uniquement
+- UNIQUEMENT du JSON valide, pas de texte explicatif
 - Questions precises sur ${currentContext.chapter}
 - Reponses courtes et claires
 - ${isMathSubject ? 'Formules en LaTeX avec $...$' : 'PAS de formules mathematiques'}
-- Exactement 10 flashcards
+- Exactement 50 flashcards
 - Contenu adapte au niveau ${currentContext.level}`;
 
                     let response;
@@ -1686,12 +1682,21 @@ Regles IMPORTANTES :
                     }
 
                     let cleanResponse = response.trim();
-                    const jsonMatch = cleanResponse.match(/\[.*\]/s);
+                    
+                    // Extraire le JSON même s'il y a du texte avant/après
+                    const jsonMatch = cleanResponse.match(/\[\s*\{[\s\S]*?\}\s*\]/s);
                     if (jsonMatch) {
                         cleanResponse = jsonMatch[0];
+                    } else {
+                        // Chercher un début de tableau JSON
+                        const startIndex = cleanResponse.indexOf('[{');
+                        const endIndex = cleanResponse.lastIndexOf('}]');
+                        if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+                            cleanResponse = cleanResponse.substring(startIndex, endIndex + 2);
+                        }
                     }
 
-                    // Nettoyage JSON minimal
+                    // Nettoyage JSON complet
                     cleanResponse = cleanResponse
                         .replace(/\(\s*"question":/g, '{"question":')
                         .replace(/\}\s*\)/g, '}}')
@@ -1702,27 +1707,57 @@ Regles IMPORTANTES :
                         .replace(/\\t/g, ' ')
                         .replace(/\s+/g, ' ')
                         .replace(/,\s*}/g, '}')
-                        .replace(/,\s*]/g, ']');
+                        .replace(/,\s*]/g, ']')
+                        // Corrections supplémentaires
+                        .replace(/"([^"]*)"/g, (match, content) => {
+                            // Nettoyer le contenu des chaînes
+                            return '"' + content.replace(/"/g, "'").replace(/\n/g, ' ').replace(/\r/g, ' ') + '"';
+                        })
+                        .replace(/,\s*,/g, ',')
+                        .replace(/\}\s*\{/g, '}, {')
+                        .replace(/\]\s*\[/g, '], [')
+                        .replace(/([^,\[\{])\s*\{/g, '$1, {');
 
                     try {
-                        flashcards = JSON.parse(cleanResponse);
+                        // Tentative de parsing avec validation
+                        let parsedData = JSON.parse(cleanResponse);
                         
-                        if (!Array.isArray(flashcards)) {
-                            throw new Error('Format invalide');
+                        if (!Array.isArray(parsedData)) {
+                            throw new Error('Format invalide - pas un tableau');
                         }
                         
-                        // Si moins de 10, relancer la génération
+                        // Valider chaque flashcard
+                        flashcards = parsedData.filter(card => 
+                            card && 
+                            typeof card === 'object' && 
+                            card.question && 
+                            card.answer &&
+                            typeof card.question === 'string' &&
+                            typeof card.answer === 'string'
+                        ).slice(0, 50); // Limiter à 50
+                        
                         if (flashcards.length < 10) {
-                            throw new Error('Pas assez de flashcards générées');
-                        }
-                        
-                        if (flashcards.length > 10) {
-                            flashcards = flashcards.slice(0, 10);
+                            throw new Error(`Seulement ${flashcards.length} flashcards valides générées`);
                         }
                         
                     } catch (parseError) {
-                        console.error('Impossible de générer les flashcards:', parseError);
-                        throw new Error('Génération échouée');
+                        console.error('Erreur parsing JSON:', parseError);
+                        console.log('JSON problématique:', cleanResponse.substring(0, 500) + '...');
+                        
+                        // Tentative de récupération avec regex
+                        try {
+                            const matches = cleanResponse.match(/\{\s*"question"\s*:\s*"[^"]*"\s*,\s*"answer"\s*:\s*"[^"]*"\s*\}/g);
+                            if (matches && matches.length >= 10) {
+                                flashcards = matches.slice(0, 50).map(match => {
+                                    const parsed = JSON.parse(match);
+                                    return parsed;
+                                });
+                            } else {
+                                throw new Error('Impossible de récupérer les flashcards');
+                            }
+                        } catch (regexError) {
+                            throw new Error('Génération échouée - JSON invalide');
+                        }
                     }
 
                     currentFlashcardIndex = 0;
@@ -1771,7 +1806,7 @@ Regles IMPORTANTES :
                     body: JSON.stringify({
                         model: 'llama3-8b-8192',
                         messages: [{ role: "user", content: prompt }],
-                        max_tokens: 2000,
+                        max_tokens: 8000,
                         temperature: 0.9,
                         top_p: 0.9,
                         seed: Math.floor(Math.random() * 10000)
@@ -1852,17 +1887,7 @@ Regles IMPORTANTES :
                     generateFlashcards();
                 }
                 
-                // Gestion du bouton nouvelles flashcards
-                const newFlashcardsBtn = document.getElementById('new-flashcards');
-                newFlashcardsBtn.addEventListener('click', function() {
-                    if (currentContext && currentContext.subject && currentContext.chapter) {
-                        // Réinitialiser complètement
-                        flashcards = [];
-                        currentFlashcardIndex = 0;
-                        flashcardsGenerated = false;
-                        generateFlashcards();
-                    }
-                });
+
             });
             
             // Envoyer un message
