@@ -179,6 +179,100 @@
             background: #4a5568;
         }
 
+        .speak-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 8px;
+            transition: var(--transition);
+            opacity: 0.8;
+            width: auto;
+            max-width: none;
+            min-width: 32px;
+        }
+
+        .speak-btn:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .speak-btn.speaking {
+            background: var(--success-color);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .voice-controls {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+        }
+
+        .voice-controls.active {
+            display: flex;
+        }
+
+        .voice-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 4px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: var(--transition);
+            width: auto;
+            max-width: none;
+            margin: 0;
+            min-width: 24px;
+        }
+
+        .voice-btn:hover {
+            background: var(--accent-color);
+        }
+
+        .speed-control {
+            width: 40px;
+            height: 20px;
+            font-size: 10px;
+            padding: 2px;
+            margin: 0 2px;
+        }
+
+        .copy-btn {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 8px;
+            transition: var(--transition);
+            opacity: 0.8;
+            width: auto;
+            max-width: none;
+            min-width: 32px;
+        }
+
+        .copy-btn:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .copy-btn.copied {
+            background: var(--warning-color);
+        }
+
         h1 {
             color: var(--primary-color);
             margin-bottom: 10px;
@@ -305,9 +399,11 @@
             font-weight: 600;
             transition: var(--transition);
             width: 100%;
+            max-width: 300px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto;
         }
 
         button i {
@@ -592,7 +688,9 @@
 
         #send-btn {
             width: auto;
+            max-width: none;
             padding: 14px 20px;
+            margin: 0;
         }
 
         .loading {
@@ -854,6 +952,8 @@
             font-size: 14px;
             transition: var(--transition);
             width: auto;
+            max-width: none;
+            margin: 0;
             white-space: nowrap;
         }
         
@@ -1308,8 +1408,16 @@
             // Vérifier la disponibilité d'Ollama au chargement
             checkOllamaAvailability();
             
-            // Sauvegarder les préférences avant de quitter
-            window.addEventListener('beforeunload', savePreferences);
+            // Sauvegarder les préférences et arrêter la lecture avant de quitter
+            window.addEventListener('beforeunload', function() {
+                speechSynthesis.cancel();
+                savePreferences();
+            });
+            
+            // Arrêter la lecture lors du rechargement de la page
+            window.addEventListener('pagehide', function() {
+                speechSynthesis.cancel();
+            });
             
             function savePreferences() {
                 const preferences = {
@@ -1400,6 +1508,10 @@
             
             refreshBtn.addEventListener('click', function() {
                 const t = translations[currentLanguage];
+                
+                // Arrêter toute lecture en cours
+                speechSynthesis.cancel();
+                isPaused = false;
                 
                 // Vider l'historique de conversation
                 conversationHistory = [];
@@ -1624,8 +1736,8 @@
                 
                 try {
                     const langInstruction = currentLanguage === 'fr' ? 
-                        'Crée exactement 50 flashcards EN FRANÇAIS' : 
-                        'Create exactly 50 flashcards IN ENGLISH';
+                        'Crée exactement 25 flashcards EN FRANÇAIS' : 
+                        'Create exactly 25 flashcards IN ENGLISH';
                     
                     let mathInstructions = '';
                     if (currentContext.subject.includes('mathematiques') || currentContext.subject.includes('physique') || currentContext.subject.includes('scientifique')) {
@@ -1654,7 +1766,7 @@ Pour les formules mathematiques :
 
 ${langInstruction} pour le chapitre "${currentContext.chapter}" en ${currentContext.subject} niveau ${currentContext.level}.${mathInstructions}
 
-Crée EXACTEMENT 50 flashcards variées (seed: ${randomSeed}):
+Crée EXACTEMENT 25 flashcards variées (seed: ${randomSeed}):
 ${randomHint}
 
 Types de questions adaptés à ${currentContext.subject} :
@@ -1671,7 +1783,7 @@ Regles IMPORTANTES :
 - Questions precises sur ${currentContext.chapter}
 - Reponses courtes et claires
 - ${isMathSubject ? 'Formules en LaTeX avec $...$' : 'PAS de formules mathematiques'}
-- Exactement 50 flashcards
+- Exactement 25 flashcards
 - Contenu adapte au niveau ${currentContext.level}`;
 
                     let response;
@@ -1696,27 +1808,25 @@ Regles IMPORTANTES :
                         }
                     }
 
-                    // Nettoyage JSON complet
+                    // Nettoyage JSON ultra-robuste
                     cleanResponse = cleanResponse
-                        .replace(/\(\s*"question":/g, '{"question":')
-                        .replace(/\}\s*\)/g, '}}')
-                        .replace(/\),\s*\(/g, '}, {')
-                        .replace(/^\[\(/g, '[{')
-                        .replace(/\)\]$/g, '}]')
                         .replace(/\\n/g, ' ')
                         .replace(/\\t/g, ' ')
                         .replace(/\s+/g, ' ')
-                        .replace(/,\s*}/g, '}')
-                        .replace(/,\s*]/g, ']')
-                        // Corrections supplémentaires
+                        .trim();
+                    
+                    // Supprimer toutes les virgules orphelines
+                    cleanResponse = cleanResponse
+                        .replace(/\[\s*,+\s*/g, '[')
+                        .replace(/,+\s*\]/g, ']')
+                        .replace(/,+\s*\}/g, '}')
+                        .replace(/\{\s*,+\s*/g, '{')
+                        .replace(/,+\s*,+/g, ',')
+                        .replace(/\}\s*,+\s*\{/g, '}, {')
+                        // Nettoyer les chaînes
                         .replace(/"([^"]*)"/g, (match, content) => {
-                            // Nettoyer le contenu des chaînes
                             return '"' + content.replace(/"/g, "'").replace(/\n/g, ' ').replace(/\r/g, ' ') + '"';
-                        })
-                        .replace(/,\s*,/g, ',')
-                        .replace(/\}\s*\{/g, '}, {')
-                        .replace(/\]\s*\[/g, '], [')
-                        .replace(/([^,\[\{])\s*\{/g, '$1, {');
+                        });
 
                     try {
                         // Tentative de parsing avec validation
@@ -1734,7 +1844,7 @@ Regles IMPORTANTES :
                             card.answer &&
                             typeof card.question === 'string' &&
                             typeof card.answer === 'string'
-                        ).slice(0, 50); // Limiter à 50
+                        ).slice(0, 25); // Limiter à 25
                         
                         if (flashcards.length < 10) {
                             throw new Error(`Seulement ${flashcards.length} flashcards valides générées`);
@@ -1744,14 +1854,30 @@ Regles IMPORTANTES :
                         console.error('Erreur parsing JSON:', parseError);
                         console.log('JSON problématique:', cleanResponse.substring(0, 500) + '...');
                         
-                        // Tentative de récupération avec regex
+                        // Tentative de récupération avec regex améliorée
                         try {
-                            const matches = cleanResponse.match(/\{\s*"question"\s*:\s*"[^"]*"\s*,\s*"answer"\s*:\s*"[^"]*"\s*\}/g);
-                            if (matches && matches.length >= 10) {
-                                flashcards = matches.slice(0, 50).map(match => {
-                                    const parsed = JSON.parse(match);
-                                    return parsed;
-                                });
+                            // Extraire chaque objet flashcard individuellement
+                            const matches = cleanResponse.match(/\{[^{}]*"question"[^{}]*"answer"[^{}]*\}/g);
+                            if (matches && matches.length >= 5) {
+                                flashcards = [];
+                                for (let match of matches.slice(0, 25)) {
+                                    try {
+                                        // Nettoyer chaque objet individuellement
+                                        let cleanMatch = match
+                                            .replace(/,+\s*\}/g, '}')
+                                            .replace(/\{\s*,+/g, '{')
+                                            .replace(/,+\s*,+/g, ',');
+                                        const parsed = JSON.parse(cleanMatch);
+                                        if (parsed.question && parsed.answer) {
+                                            flashcards.push(parsed);
+                                        }
+                                    } catch (e) {
+                                        console.log('Objet flashcard ignoré:', match);
+                                    }
+                                }
+                                if (flashcards.length < 5) {
+                                    throw new Error('Pas assez de flashcards valides');
+                                }
                             } else {
                                 throw new Error('Impossible de récupérer les flashcards');
                             }
@@ -1771,7 +1897,15 @@ Regles IMPORTANTES :
 
                 } catch (error) {
                     console.error('Erreur génération flashcards:', error);
-                    loadingElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur lors de la génération des flashcards. <br><small>Essayez de relancer la génération.</small>';
+                    let errorMsg = 'Erreur lors de la génération des flashcards.';
+                    
+                    if (error.message.includes('429')) {
+                        errorMsg = 'Limite de requêtes atteinte. Attendez quelques minutes avant de réessayer.';
+                    } else if (error.message.includes('JSON')) {
+                        errorMsg = 'Erreur de format. Essayez de relancer la génération.';
+                    }
+                    
+                    loadingElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${errorMsg} <br><small>Cliquez sur l'onglet Flashcards pour réessayer.</small>`;
                 }
             }
             
@@ -1797,25 +1931,41 @@ Regles IMPORTANTES :
             }
             
             async function callGroqForFlashcards(prompt) {
-                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer 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`
-                    },
-                    body: JSON.stringify({
-                        model: 'llama3-8b-8192',
-                        messages: [{ role: "user", content: prompt }],
-                        max_tokens: 8000,
-                        temperature: 0.9,
-                        top_p: 0.9,
-                        seed: Math.floor(Math.random() * 10000)
-                    })
-                });
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 45000);
                 
-                if (!response.ok) throw new Error(`Erreur Groq: ${response.status}`);
-                const data = await response.json();
-                return data.choices[0].message.content;
+                try {
+                    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer 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`
+                        },
+                        body: JSON.stringify({
+                            model: 'llama3-8b-8192',
+                            messages: [{ role: "user", content: prompt }],
+                            max_tokens: 6000,
+                            temperature: 0.8,
+                            top_p: 0.9
+                        }),
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        if (response.status === 429) {
+                            throw new Error('Erreur Groq: 429 - Limite de taux atteinte');
+                        }
+                        throw new Error(`Erreur Groq: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    return data.choices[0].message.content;
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    throw error;
+                }
             }
             
             // Gestion du changement de niveau
@@ -1981,9 +2131,43 @@ Regles IMPORTANTES :
                 const assistantName = apiMode === 'groq' ? 'Llama 3 (Groq)' : t.assistantName;
                 messageInfo.textContent = sender === 'user' ? t.you : assistantName;
 
+                // Ajouter contrôles pour les messages IA
+                if (sender === 'ai') {
+                    // Bouton copie
+                    const copyBtn = document.createElement('button');
+                    copyBtn.classList.add('copy-btn');
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                    copyBtn.title = 'Copier le texte';
+                    copyBtn.onclick = () => copyMessage(message, copyBtn);
+                    messageInfo.appendChild(copyBtn);
+                    
+                    // Bouton lecture
+                    const speakBtn = document.createElement('button');
+                    speakBtn.classList.add('speak-btn');
+                    speakBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    speakBtn.title = 'Écouter la réponse';
+                    speakBtn.onclick = () => toggleSpeech(message, speakBtn);
+                    messageInfo.appendChild(speakBtn);
+                    
+                    // Contrôles vocaux simples
+                    const voiceControls = document.createElement('div');
+                    voiceControls.classList.add('voice-controls');
+                    voiceControls.innerHTML = `
+                        <button class="voice-btn pause-btn" title="Pause">
+                            <i class="fas fa-pause"></i>
+                        </button>
+                        <button class="voice-btn stop-btn" title="Stop">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                        <input type="range" class="speed-control" min="0.5" max="2" step="0.1" value="1.0" title="Vitesse">
+                        <span class="speed-display">1.0x</span>
+                    `;
+                    messageInfo.appendChild(voiceControls);
+                }
+
                 messageElement.appendChild(messageInfo);
                 chatMessages.appendChild(messageElement);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                // Ne pas scroller automatiquement pour rester en haut
 
                 // Rendu MathJax avec gestion d'erreur
                 setTimeout(() => {
@@ -2181,6 +2365,225 @@ Regles IMPORTANTES :
             
 
             
+            let currentUtterance = null;
+            let currentSpeechRate = 1.0;
+            let isPaused = false;
+            
+            function copyMessage(message, button) {
+                const cleanText = message
+                    .replace(/<[^>]*>/g, '')
+                    .replace(/\$\$[^$]*\$\$/g, '[formule mathématique]')
+                    .replace(/\$[^$]*\$/g, '[formule]')
+                    .replace(/\*\*([^*]+)\*\*/g, '$1')
+                    .replace(/\*([^*]+)\*/g, '$1')
+                    .replace(/_{1,2}([^_]+)_{1,2}/g, '$1')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                
+                navigator.clipboard.writeText(cleanText).then(() => {
+                    const originalHTML = button.innerHTML;
+                    button.classList.add('copied');
+                    button.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => {
+                        button.classList.remove('copied');
+                        button.innerHTML = originalHTML;
+                    }, 2000);
+                }).catch(() => {
+                    alert('Impossible de copier le texte');
+                });
+            }
+            
+            function toggleSpeech(message, button) {
+                if (speechSynthesis.speaking) {
+                    speechSynthesis.cancel();
+                    isPaused = false;
+                    document.querySelectorAll('.speak-btn').forEach(btn => {
+                        btn.classList.remove('speaking');
+                        btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    });
+                    document.querySelectorAll('.voice-controls').forEach(ctrl => {
+                        ctrl.classList.remove('active');
+                    });
+                    return;
+                }
+                speakMessage(message, button);
+            }
+            
+            // Gestionnaire d'événements pour les contrôles vocaux
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.pause-btn')) {
+                    if (speechSynthesis.speaking && !isPaused) {
+                        speechSynthesis.pause();
+                        isPaused = true;
+                        e.target.closest('.pause-btn').innerHTML = '<i class="fas fa-play"></i>';
+                        e.target.closest('.pause-btn').title = 'Reprendre';
+                    } else if (isPaused) {
+                        speechSynthesis.resume();
+                        isPaused = false;
+                        e.target.closest('.pause-btn').innerHTML = '<i class="fas fa-pause"></i>';
+                        e.target.closest('.pause-btn').title = 'Pause';
+                    }
+                }
+                
+                if (e.target.closest('.stop-btn')) {
+                    speechSynthesis.cancel();
+                    isPaused = false;
+                    document.querySelectorAll('.speak-btn').forEach(btn => {
+                        btn.classList.remove('speaking');
+                        btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    });
+                    document.querySelectorAll('.voice-controls').forEach(ctrl => {
+                        ctrl.classList.remove('active');
+                    });
+                    document.querySelectorAll('.pause-btn').forEach(btn => {
+                        btn.innerHTML = '<i class="fas fa-pause"></i>';
+                        btn.title = 'Pause';
+                    });
+                }
+            });
+            
+            // Gestionnaire pour le contrôle de vitesse
+            document.addEventListener('input', (e) => {
+                if (e.target.classList.contains('speed-control')) {
+                    const speed = e.target.value;
+                    currentSpeechRate = parseFloat(speed);
+                    const display = e.target.parentElement.querySelector('.speed-display');
+                    if (display) display.textContent = speed + 'x';
+                }
+            });
+            
+            function speakMessage(message, button) {
+                let cleanText = message
+                    .replace(/<[^>]*>/g, ' ')
+                    .replace(/\$\$[^$]*\$\$/g, ' formule mathématique ')
+                    .replace(/\$[^$]*\$/g, ' formule ')
+                    .replace(/\*\*([^*]+)\*\*/g, '$1')
+                    .replace(/\*([^*]+)\*/g, '$1')
+                    .replace(/_{1,2}([^_]+)_{1,2}/g, '$1')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                speechSynthesis.cancel();
+                isPaused = false;
+                document.querySelectorAll('.speak-btn').forEach(btn => {
+                    btn.classList.remove('speaking');
+                    btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                });
+                document.querySelectorAll('.voice-controls').forEach(ctrl => {
+                    ctrl.classList.remove('active');
+                });
+                document.querySelectorAll('.pause-btn').forEach(btn => {
+                    btn.innerHTML = '<i class="fas fa-pause"></i>';
+                    btn.title = 'Pause';
+                });
+
+                button.classList.add('speaking');
+                button.innerHTML = '<i class="fas fa-stop"></i>';
+                
+                // Afficher les contrôles vocaux
+                const voiceControls = button.parentElement.querySelector('.voice-controls');
+                if (voiceControls) voiceControls.classList.add('active');
+                
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                
+                // Attendre que les voix soient chargées
+                const speakWithBestVoice = () => {
+                    const voices = speechSynthesis.getVoices();
+                    
+                    // Recherche des meilleures voix par priorité
+                    const voicePreferences = currentLanguage === 'fr' ? [
+                        'Google français',
+                        'Microsoft Hortense',
+                        'Microsoft Julie',
+                        'Amelie',
+                        'Thomas'
+                    ] : [
+                        'Google UK English Female',
+                        'Google US English',
+                        'Microsoft Zira',
+                        'Microsoft Hazel',
+                        'Samantha',
+                        'Karen'
+                    ];
+                    
+                    let selectedVoice = null;
+                    
+                    // Chercher la meilleure voix disponible
+                    for (const pref of voicePreferences) {
+                        selectedVoice = voices.find(voice => 
+                            voice.name.toLowerCase().includes(pref.toLowerCase())
+                        );
+                        if (selectedVoice) break;
+                    }
+                    
+                    // Fallback sur n'importe quelle voix de la bonne langue
+                    if (!selectedVoice) {
+                        selectedVoice = voices.find(voice => 
+                            currentLanguage === 'fr' ? 
+                                voice.lang.includes('fr') : 
+                                voice.lang.includes('en')
+                        );
+                    }
+                    
+                    if (selectedVoice) {
+                        utterance.voice = selectedVoice;
+                        console.log('Voix sélectionnée:', selectedVoice.name);
+                    }
+                    
+                    utterance.lang = currentLanguage === 'fr' ? 'fr-FR' : 'en-US';
+                    utterance.rate = currentSpeechRate;
+                    utterance.pitch = 1.1;
+                    utterance.volume = 1.0;
+                    
+                    currentUtterance = utterance;
+                    
+                    utterance.onend = () => {
+                        button.classList.remove('speaking');
+                        button.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        const voiceControls = button.parentElement.querySelector('.voice-controls');
+                        if (voiceControls) voiceControls.classList.remove('active');
+                        currentUtterance = null;
+                        isPaused = false;
+                        document.querySelectorAll('.pause-btn').forEach(btn => {
+                            btn.innerHTML = '<i class="fas fa-pause"></i>';
+                            btn.title = 'Pause';
+                        });
+                    };
+                    
+                    utterance.onerror = () => {
+                        button.classList.remove('speaking');
+                        button.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        const voiceControls = button.parentElement.querySelector('.voice-controls');
+                        if (voiceControls) voiceControls.classList.remove('active');
+                        currentUtterance = null;
+                        isPaused = false;
+                        document.querySelectorAll('.pause-btn').forEach(btn => {
+                            btn.innerHTML = '<i class="fas fa-pause"></i>';
+                            btn.title = 'Pause';
+                        });
+                    };
+                    
+                    speechSynthesis.speak(utterance);
+                };
+                
+                if (speechSynthesis.getVoices().length === 0) {
+                    speechSynthesis.onvoiceschanged = speakWithBestVoice;
+                } else {
+                    speakWithBestVoice();
+                }
+            }
+            
+            // Raccourcis clavier
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === ' ') {
+                    e.preventDefault();
+                    document.querySelector('.pause-btn')?.click();
+                } else if (e.ctrlKey && e.key === 'Escape') {
+                    e.preventDefault();
+                    document.querySelector('.stop-btn')?.click();
+                }
+            });
+
             async function callGroq() {
                 const messages = conversationHistory.map(msg => ({
                     role: msg.role,
@@ -2249,5 +2652,6 @@ Regles IMPORTANTES :
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
 </body>
 </html>
