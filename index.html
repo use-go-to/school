@@ -1762,29 +1762,29 @@ Pour les formules mathematiques :
                     
                     const isMathSubject = currentContext.subject.includes('mathematiques') || currentContext.subject.includes('physique') || currentContext.subject.includes('scientifique');
                     
-                    const prompt = `IMPORTANT: Réponds UNIQUEMENT avec un JSON valide, sans texte avant ou après.
+                    const prompt = `Tu es un professeur agrégé de ${currentContext.subject} spécialisé dans la création de flashcards pédagogiques pour le niveau ${currentContext.level}.
 
-${langInstruction} pour le chapitre "${currentContext.chapter}" en ${currentContext.subject} niveau ${currentContext.level}.${mathInstructions}
+EXIGENCE ABSOLUE DE PRECISION ACADEMIQUE:
+- Vérifie mentalement chaque fait, date, nom propre et définition avant de l'écrire
+- Utilise UNIQUEMENT des informations issues des manuels scolaires officiels
+- En cas de doute sur une information, ne l'inclus PAS dans les flashcards
+- Respecte scrupuleusement la terminologie du programme officiel
+- Vérifie la chronologie et ne confonds jamais les époques
 
-Crée EXACTEMENT 25 flashcards variées (seed: ${randomSeed}):
-${randomHint}
+${langInstruction} pour le chapitre "${currentContext.chapter}" niveau ${currentContext.level}.
 
-Types de questions adaptés à ${currentContext.subject} :
-${isMathSubject ? 
-    '- Definitions mathematiques\n- Formules et equations\n- Methodes de calcul\n- Proprietes importantes\n- Applications numeriques' :
-    '- Definitions et concepts\n- Dates et chronologie\n- Personnages et acteurs\n- Causes et consequences\n- Contexte historique/geographique'
-}
+CONSIGNES STRICTES POUR LES FLASHCARDS:
+1. Crée EXACTEMENT 25 flashcards de qualité académique
+2. Questions précises et factuelles sur ${currentContext.chapter}
+3. Réponses courtes, exactes et vérifiables
+4. Niveau de difficulté adapté au ${currentContext.level}
+5. ${isMathSubject ? 'Formules en LaTeX avec $...$' : 'Terminologie française exclusive'}
+6. Pas d'approximations ni de généralités vagues
 
-Format JSON strict (AUCUN autre texte) :
-[{"question": "${isMathSubject ? 'Quelle est la definition de...' : 'Que signifie...'}", "answer": "${isMathSubject ? 'Cela se definit par...' : 'Cela signifie...'}"}]
+FORMAT OBLIGATOIRE - Réponds UNIQUEMENT avec ce JSON valide:
+[{"question": "Question précise?", "answer": "Réponse exacte et vérifiée"}]
 
-Regles IMPORTANTES :
-- UNIQUEMENT du JSON valide, pas de texte explicatif
-- Questions precises sur ${currentContext.chapter}
-- Reponses courtes et claires
-- ${isMathSubject ? 'Formules en LaTeX avec $...$' : 'PAS de formules mathematiques'}
-- Exactement 25 flashcards
-- Contenu adapte au niveau ${currentContext.level}`;
+ATTENTION: Aucune erreur factuelle n'est tolérée. Ces flashcards seront utilisées pour l'apprentissage scolaire.`;
 
                     let response;
                     if (apiMode === 'ollama') {
@@ -1945,8 +1945,8 @@ Regles IMPORTANTES :
                             model: 'llama3-8b-8192',
                             messages: [{ role: "user", content: prompt }],
                             max_tokens: 6000,
-                            temperature: 0.8,
-                            top_p: 0.9
+                            temperature: 0.3,
+                            top_p: 0.130
                         }),
                         signal: controller.signal
                     });
@@ -2052,37 +2052,76 @@ Regles IMPORTANTES :
                 let userMessage = "";
                 let apiMessage = "";
 
-                // Message affiché à l'utilisateur (sans les instructions LaTeX)
+                // Déterminer la matière en français pour le rôle
+                const subjectNames = {
+                    'mathematiques': 'mathématiques',
+                    'francais': 'français',
+                    'histoire_geographie': 'histoire-géographie',
+                    'anglais': 'anglais',
+                    'svt': 'SVT (sciences de la vie et de la Terre)',
+                    'physique_chimie': 'physique-chimie',
+                    'technologie': 'technologie',
+                    'arts_plastiques': 'arts plastiques',
+                    'education_musicale': 'éducation musicale',
+                    'eps': 'EPS',
+                    'ses': 'SES (sciences économiques et sociales)',
+                    'enseignement_scientifique': 'enseignement scientifique',
+                    'philosophie': 'philosophie',
+                    'specialite_mathematiques': 'mathématiques (spécialité)',
+                    'specialite_physique_chimie': 'physique-chimie (spécialité)',
+                    'specialite_svt': 'SVT (spécialité)',
+                    'specialite_ses': 'SES (spécialité)',
+                    'specialite_hggsp': 'HGGSP (spécialité)',
+                    'specialite_hlp': 'HLP (spécialité)',
+                    'specialite_llcer': 'LLCER (spécialité)',
+                    'specialite_nsi': 'NSI (spécialité)'
+                };
+                
+                const subjectName = subjectNames[subject] || subject;
+                const levelText = levelSelect.options[levelSelect.selectedIndex].text;
+
+                // Message affiché à l'utilisateur
                 switch(option) {
                     case 'comprendre':
-                        userMessage = `Peux-tu m'expliquer le chapitre "${chapter}" en ${subject} pour un niveau ${level} ? J'aimerais comprendre les concepts clés.`;
+                        userMessage = `Peux-tu m'expliquer le chapitre "${chapter}" en ${subjectName} pour un niveau ${levelText} ? J'aimerais comprendre les concepts clés.`;
                         break;
                     case 'devoir':
-                        userMessage = `J'ai besoin d'aide pour un devoir sur le chapitre "${chapter}" en ${subject} (niveau ${level}).`;
+                        userMessage = `J'ai besoin d'aide pour un devoir sur le chapitre "${chapter}" en ${subjectName} (niveau ${levelText}).`;
                         break;
                     case 'exercice':
-                        userMessage = `Peux-tu me proposer des exercices supplémentaires sur le chapitre "${chapter}" en ${subject} pour un niveau ${level} ?`;
+                        userMessage = `Peux-tu me proposer des exercices supplémentaires sur le chapitre "${chapter}" en ${subjectName} pour un niveau ${levelText} ?`;
                         break;
                     case 'revision':
-                        userMessage = `J'aimerais réviser le chapitre "${chapter}" en ${subject} (niveau ${level}). Peux-tu me faire un résumé ?`;
+                        userMessage = `J'aimerais réviser le chapitre "${chapter}" en ${subjectName} (niveau ${levelText}). Peux-tu me faire un résumé ?`;
                         break;
                     case 'explication':
-                        userMessage = `Pourrais-tu m'expliquer en détail le chapitre "${chapter}" en ${subject} pour un niveau ${level} ?`;
+                        userMessage = `Pourrais-tu m'expliquer en détail le chapitre "${chapter}" en ${subjectName} pour un niveau ${levelText} ?`;
                         break;
                     default:
-                        userMessage = `J'aimerais discuter du chapitre "${chapter}" en ${subject} (niveau ${level}).`;
+                        userMessage = `J'aimerais discuter du chapitre "${chapter}" en ${subjectName} (niveau ${levelText}).`;
                 }
                 
-                // Message envoyé à l'API (avec instructions adaptées selon la matière et la langue)
-                let instructions = "";
-                let langInstruction = currentLanguage === 'fr' ? "Réponds TOUJOURS en français." : "Always respond in English.";
+                // Message avec rôle de professeur renforcé pour l'API
+                let roleInstruction = `Tu es un professeur agrégé de ${subjectName}, spécialiste du niveau ${levelText} avec 20 ans d'expérience. Tu maîtrises parfaitement le programme officiel de l'Éducation nationale française et les attendus pédagogiques de ce niveau.`;
                 
-                if (subject.includes('mathematiques') || subject.includes('physique_chimie') || subject === 'enseignement_scientifique') {
-                    instructions = `${langInstruction} IMPORTANT: Utilise UNIQUEMENT la syntaxe LaTeX correcte pour les mathématiques: $a_n$ pour les indices, $a^n$ pour les exposants, $a_{n+1}$ pour les indices composés. Utilise $$formule$$ pour les formules en bloc centrées. Évite les caractères spéciaux corrompus. Structure avec des titres (**Titre**) et listes (* item).`;
-                } else {
-                    instructions = `${langInstruction} Réponds de manière claire et structurée, adaptée au niveau scolaire. Utilise des titres en gras (**Titre**), des listes à puces (* item), et de l'italique (_texte_) pour structurer ta réponse.`;
+                let accuracyInstructions = `EXIGENCE ABSOLUE DE PRECISION: Vérifie mentalement chaque fait, date, nom propre et événement avant de l'écrire. En cas de doute sur une information, précise "selon certaines sources" ou omets l'information plutôt que de risquer une erreur. Ne JAMAIS confondre les époques, les personnages ou les événements.`;
+                
+                let contextualInstructions = "";
+                if (subject.includes('histoire') || subject.includes('geographie')) {
+                    contextualInstructions = `ATTENTION PARTICULIERE HISTOIRE: 1) Respecte scrupuleusement la chronologie - vérifie l'ordre des événements, 2) Ne confonds JAMAIS les époques (ex: Première vs Seconde Guerre mondiale), 3) Utilise EXCLUSIVEMENT la terminologie française ("Axe" pas "Axis", "Alliés" pas "Allies"), 4) Vérifie les dates précises des traités, pactes et accords AVANT de mentionner leurs conséquences, 5) Contextualise chaque événement dans sa période exacte avec les bonnes dates.`;
+                } else if (subject.includes('mathematiques') || subject.includes('physique') || subject.includes('scientifique')) {
+                    contextualInstructions = `RIGUEUR SCIENTIFIQUE: Vérifie chaque formule, théorème et propriété mathématique. Utilise la syntaxe LaTeX correcte: $a_n$ pour indices, $a^n$ pour exposants, $$formule$$ pour formules centrées. Explique chaque étape de calcul.`;
+                } else if (subject.includes('francais') || subject.includes('litterature')) {
+                    contextualInstructions = `PRECISION LITTERAIRE: Vérifie les titres d'œuvres, noms d'auteurs, dates de publication, mouvements littéraires. Contextualise chaque œuvre dans son époque et son mouvement.`;
                 }
-                apiMessage = `${userMessage} ${instructions}`;
+                
+                let langInstruction = currentLanguage === 'fr' ? "Réponds EXCLUSIVEMENT en français." : "Always respond in English.";
+                
+                let formatInstructions = `Structure pédagogique OBLIGATOIRE: Utilise des titres clairs (**Titre**), des listes à puces (* item), et de l'italique (_terme important_) pour faciliter la compréhension.`;
+                
+                let pedagogyInstructions = `Méthode pédagogique: 1) Explique clairement les concepts, 2) Donne des exemples concrets du niveau ${levelText}, 3) Fais des liens avec le programme officiel, 4) Adapte le vocabulaire au niveau scolaire, 5) Termine par une section **Sources recommandées** avec 3-4 références fiables (manuels scolaires, sites institutionnels, documentaires reconnus).`;
+                
+                apiMessage = `${roleInstruction}\n\n${accuracyInstructions}\n\n${contextualInstructions}\n\n${langInstruction} ${formatInstructions}\n\n${pedagogyInstructions}\n\nQuestion de l'élève: ${userMessage}`;
                 
                 // Ajouter le message complet à l'historique pour l'API
                 conversationHistory.push({ role: "user", content: apiMessage });
@@ -2098,14 +2137,40 @@ Regles IMPORTANTES :
                 const message = userInput.value.trim();
                 if (!message) return;
 
-                // Ajoute la consigne LaTeX pour les réponses IA
-                let latexInstruction = "IMPORTANT: Utilise toujours la syntaxe LaTeX pour les symboles mathématiques ($...$ pour inline, $$...$$ pour bloc), pour que les formules soient parfaitement lisibles.";
-                let messageForAI = message + " " + latexInstruction;
+                // Construire le message avec le contexte du professeur
+                const subjectNames = {
+                    'mathematiques': 'mathématiques',
+                    'francais': 'français',
+                    'histoire_geographie': 'histoire-géographie',
+                    'anglais': 'anglais',
+                    'svt': 'SVT',
+                    'physique_chimie': 'physique-chimie',
+                    'ses': 'SES',
+                    'philosophie': 'philosophie'
+                };
+                
+                const subjectName = subjectNames[currentContext.subject] || currentContext.subject;
+                const levelText = currentContext.level;
+                
+                let contextInstruction = `En tant que professeur agrégé de ${subjectName} niveau ${levelText}, réponds avec une PRECISION ABSOLUE à cette question sur "${currentContext.chapter}". Vérifie mentalement chaque fait avant de l'écrire.`;
+                
+                let accuracyReminder = "RAPPEL CRITIQUE: Aucune erreur factuelle n'est tolérée. En cas de doute, précise \"selon certaines sources\" ou omets l'information.";
+                
+                let formatInstruction = "";
+                if (currentContext.subject.includes('mathematiques') || currentContext.subject.includes('physique_chimie') || currentContext.subject === 'enseignement_scientifique') {
+                    formatInstruction = " Utilise la syntaxe LaTeX correcte pour les formules ($...$ inline, $$...$$ bloc). Vérifie chaque formule.";
+                } else if (currentContext.subject.includes('histoire') || currentContext.subject.includes('geographie')) {
+                    formatInstruction = " ATTENTION HISTOIRE: Respecte la chronologie exacte, utilise la terminologie française (\"Axe\" pas \"Axis\"), vérifie les dates des traités/pactes, ne confonds jamais les époques.";
+                }
+                
+                let sourceInstruction = " Termine par **Sources recommandées** avec références institutionnelles fiables.";
+                
+                let messageForAI = `${contextInstruction}\n\n${accuracyReminder}${formatInstruction}${sourceInstruction}\n\nQuestion: ${message}`;
 
                 // Ajouter le message à l'historique
                 conversationHistory.push({ role: "user", content: messageForAI });
 
-                // Afficher le message de l'utilisateur (sans la consigne)
+                // Afficher le message de l'utilisateur (sans les instructions)
                 displayMessage(message, 'user');
 
                 // Effacer le champ de saisie
