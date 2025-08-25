@@ -341,21 +341,20 @@
         .chat-header {
             background: linear-gradient(to right, var(--primary-color), var(--accent-color));
             color: white;
-            padding: 20px;
+            padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
         }
 
         .fullscreen-btn {
             background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 20px;
+            font-size: 16px;
             transition: var(--transition);
             width: auto;
             flex-shrink: 0;
@@ -363,18 +362,38 @@
 
         .fullscreen-btn:hover {
             background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
             .chat-header {
-                padding: 15px;
-                gap: 10px;
+                padding: 12px;
+                gap: 8px;
             }
             
             .fullscreen-btn {
+                padding: 6px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .chat-header {
                 padding: 10px;
-                font-size: 18px;
+                gap: 6px;
+            }
+            
+            .fullscreen-btn {
+                padding: 5px;
+                font-size: 13px;
+            }
+            
+            #chat-title {
+                font-size: 14px !important;
+            }
+            
+            #chat-title i {
+                font-size: 12px !important;
             }
         }
 
@@ -713,13 +732,21 @@
         
         .tab {
             flex: 1;
-            padding: 15px;
+            padding: 10px 12px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: none;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 14px;
             transition: var(--transition);
+        }
+        
+        @media (max-width: 768px) {
+            .tab {
+                padding: 8px 10px;
+                font-size: 13px;
+            }
         }
         
         .tab.active {
@@ -804,20 +831,44 @@
         
         .flashcard-navigation {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 480px) {
+            .flashcard-navigation {
+                gap: 8px;
+            }
         }
         
         .flashcard-btn {
             background: var(--primary-color);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: var(--border-radius);
+            padding: 8px 12px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 14px;
             transition: var(--transition);
             width: auto;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .flashcard-btn {
+                padding: 6px 10px;
+                font-size: 13px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .flashcard-btn {
+                padding: 5px 8px;
+                font-size: 12px;
+            }
         }
         
         .flashcard-btn:hover {
@@ -826,8 +877,18 @@
         }
         
         .flashcard-counter {
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 14px;
             color: var(--secondary-color);
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        @media (max-width: 480px) {
+            .flashcard-counter {
+                font-size: 13px;
+                min-width: 45px;
+            }
         }
         
         .dark-mode .flashcard-counter {
@@ -936,9 +997,9 @@
                     </div>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: linear-gradient(to right, var(--primary-color), var(--accent-color)); color: white;">
-                    <h2 id="chat-title"><i class="fas fa-comment-dots"></i> Discussion</h2>
-                    <div style="display: flex; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: linear-gradient(to right, var(--primary-color), var(--accent-color)); color: white;">
+                    <h3 id="chat-title" style="font-size: 16px; margin: 0; font-weight: 500;"><i class="fas fa-comment-dots" style="font-size: 14px; margin-right: 6px;"></i> Discussion</h3>
+                    <div style="display: flex; gap: 8px;">
                         <button class="fullscreen-btn" id="refresh-btn" title="Rafraîchir la discussion">
                             <i class="fas fa-redo"></i>
                         </button>
