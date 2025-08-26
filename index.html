@@ -1767,25 +1767,39 @@ Pour les formules mathematiques :
 
 EXIGENCE ABSOLUE DE PRECISION ACADEMIQUE:
 - Vérifie mentalement chaque fait, date, nom propre et définition avant de l'écrire
-- Utilise UNIQUEMENT des informations issues des manuels scolaires officiels
-- En cas de doute sur une information, ne l'inclus PAS dans les flashcards
-- Respecte scrupuleusement la terminologie du programme officiel
+- Utilise UNIQUEMENT des informations issues des manuels scolaires officiels, Digischool ou Lumni
+- En cas de doute sur une information, NE L'INCLUE PAS dans les flashcards
+- Respecte scrupuleusement la terminologie exacte du programme officiel
 - Vérifie la chronologie et ne confonds jamais les époques
+- NE JAMAIS attribuer un concept, livre ou théorie à un auteur si ce n'est pas confirmé dans les sources officielles
+- Chaque flashcard doit être vérifiée mot pour mot dans les sources officielles
 
 ${langInstruction} pour le chapitre "${currentContext.chapter}" niveau ${currentContext.level}.
 
 CONSIGNES STRICTES POUR LES FLASHCARDS:
 1. Crée EXACTEMENT 25 flashcards de qualité académique
-2. Questions précises et factuelles sur ${currentContext.chapter}
-3. Réponses courtes, exactes et vérifiables
+2. Chaque question doit être précise et factuelle
+3. Chaque réponse doit être courte, exacte, vérifiable et sourcée si possible
 4. Niveau de difficulté adapté au ${currentContext.level}
 5. ${isMathSubject ? 'Formules en LaTeX avec $...$' : 'Terminologie française exclusive'}
 6. Pas d'approximations ni de généralités vagues
+7. Si une information n’est pas confirmée dans les sources officielles, écrire exactement: "Information non confirmée dans les programmes officiels"
 
 FORMAT OBLIGATOIRE - Réponds UNIQUEMENT avec ce JSON valide:
 [{"question": "Question précise?", "answer": "Réponse exacte et vérifiée"}]
 
-ATTENTION: Aucune erreur factuelle n'est tolérée. Ces flashcards seront utilisées pour l'apprentissage scolaire.`;
+📚 SOURCES OFFICIELLES OBLIGATOIRES:
+https://www.digischool.fr/lycee/terminale-generale
+
+🔒 VALIDATION FINALE:
+- Chaque affirmation doit être textuellement confirmée dans les sources officielles
+- Aucune reformulation personnelle n’est autorisée
+- Toutes les sources doivent être listées avec URL si disponible
+- Toute information non-confirmée doit être exclue ou signalée explicitement
+- La structure JSON doit être strictement respectée
+
+ATTENTION: Aucune erreur factuelle n’est tolérée. Ces flashcards seront utilisées pour l’apprentissage scolaire.
+`;
 
                     let response;
                     if (apiMode === 'ollama') {
@@ -2050,114 +2064,254 @@ ATTENTION: Aucune erreur factuelle n'est tolérée. Ces flashcards seront utilis
             });
             
             function generateInitialMessage(level, subject, chapter, option) {
-                let userMessage = "";
-                let apiMessage = "";
+    let userMessage = "";
+    let apiMessage = "";
 
-                // Déterminer la matière en français pour le rôle
-                const subjectNames = {
-                    'mathematiques': 'mathématiques',
-                    'francais': 'français',
-                    'histoire_geographie': 'histoire-géographie',
-                    'anglais': 'anglais',
-                    'svt': 'SVT (sciences de la vie et de la Terre)',
-                    'physique_chimie': 'physique-chimie',
-                    'technologie': 'technologie',
-                    'arts_plastiques': 'arts plastiques',
-                    'education_musicale': 'éducation musicale',
-                    'eps': 'EPS',
-                    'ses': 'SES (sciences économiques et sociales)',
-                    'enseignement_scientifique': 'enseignement scientifique',
-                    'philosophie': 'philosophie',
-                    'specialite_mathematiques': 'mathématiques (spécialité)',
-                    'specialite_physique_chimie': 'physique-chimie (spécialité)',
-                    'specialite_svt': 'SVT (spécialité)',
-                    'specialite_ses': 'SES (spécialité)',
-                    'specialite_hggsp': 'HGGSP (spécialité)',
-                    'specialite_hlp': 'HLP (spécialité)',
-                    'specialite_llcer': 'LLCER (spécialité)',
-                    'specialite_nsi': 'NSI (spécialité)'
-                };
-                
-                const subjectName = subjectNames[subject] || subject;
-                const levelText = levelSelect.options[levelSelect.selectedIndex].text;
+    // Déterminer la matière en français pour le rôle
+    const subjectNames = {
+        'mathematiques': 'mathématiques',
+        'francais': 'français',
+        'histoire_geographie': 'histoire-géographie',
+        'anglais': 'anglais',
+        'svt': 'SVT (sciences de la vie et de la Terre)',
+        'physique_chimie': 'physique-chimie',
+        'technologie': 'technologie',
+        'arts_plastiques': 'arts plastiques',
+        'education_musicale': 'éducation musicale',
+        'eps': 'EPS',
+        'ses': 'SES (sciences économiques et sociales)',
+        'enseignement_scientifique': 'enseignement scientifique',
+        'philosophie': 'philosophie',
+        'specialite_mathematiques': 'mathématiques (spécialité)',
+        'specialite_physique_chimie': 'physique-chimie (spécialité)',
+        'specialite_svt': 'SVT (spécialité)',
+        'specialite_ses': 'SES (spécialité)',
+        'specialite_hggsp': 'HGGSP (spécialité)',
+        'specialite_hlp': 'HLP (spécialité)',
+        'specialite_llcer': 'LLCER (spécialité)',
+        'specialite_nsi': 'NSI (spécialité)'
+    };
+    
+    const subjectName = subjectNames[subject] || subject;
+    const levelText = levelSelect.options[levelSelect.selectedIndex].text;
 
-                // Message affiché à l'utilisateur
-                switch(option) {
-                    case 'comprendre':
-                        userMessage = `Peux-tu m'expliquer le chapitre "${chapter}" en ${subjectName} pour un niveau ${levelText} ? J'aimerais comprendre les concepts clés.`;
-                        break;
-                    case 'devoir':
-                        userMessage = `J'ai besoin d'aide pour un devoir sur le chapitre "${chapter}" en ${subjectName} (niveau ${levelText}).`;
-                        break;
-                    case 'exercice':
-                        userMessage = `Peux-tu me proposer des exercices supplémentaires sur le chapitre "${chapter}" en ${subjectName} pour un niveau ${levelText} ?`;
-                        break;
-                    case 'revision':
-                        userMessage = `J'aimerais réviser le chapitre "${chapter}" en ${subjectName} (niveau ${levelText}). Peux-tu me faire un résumé ?`;
-                        break;
-                    case 'explication':
-                        userMessage = `Pourrais-tu m'expliquer en détail le chapitre "${chapter}" en ${subjectName} pour un niveau ${levelText} ?`;
-                        break;
-                    default:
-                        userMessage = `J'aimerais discuter du chapitre "${chapter}" en ${subjectName} (niveau ${levelText}).`;
-                }
-                
-                // Sources officielles spécifiques pour Terminale
-                let officialSources = "";
-                if (level === 'terminale') {
-                    const terminaleSources = {
-                        'enseignement_scientifique': 'Programme officiel: https://www.education.gouv.fr/sites/default/files/ensel807_annexe.pdf',
-                        'histoire_geographie': 'Programme officiel: https://eduscol.education.fr/document/23416/download',
-                        'specialite_mathematiques': 'Programme officiel: https://eduscol.education.fr/document/24568/download',
-                        'philosophie': 'Programme officiel: https://eduscol.education.fr/document/24043/download',
-                        'specialite_physique_chimie': 'Programme officiel: https://eduscol.education.fr/document/22669/download',
-                        'anglais': 'Programme officiel: https://www.education.gouv.fr/sites/default/files/ensel621_annexe4.pdf',
-                        'allemand': 'Programme officiel: https://www.education.gouv.fr/sites/default/files/ensel621_annexe2_ok.pdf'
-                    };
-                    
-                    if (terminaleSources[subject]) {
-                        officialSources = `\n\nSOURCES OBLIGATOIRES pour Terminale ${subjectName}:\n- ${terminaleSources[subject]}\n- Cours fiables: https://www.digischool.fr/lycee/terminale-generale et https://www.lelivrescolaire.fr/\n- Quiz Lumni: https://www.lumni.fr/lycee/terminale/tous-les-quiz`;
-                    } else {
-                        officialSources = `\n\nSOURCES FIABLES UNIQUEMENT:\n- Programme EMC: https://eduscol.education.fr/document/23707/download\n- Cours: https://www.digischool.fr/lycee/terminale-generale et https://www.lelivrescolaire.fr/\n- Quiz: https://www.lumni.fr/lycee/terminale/tous-les-quiz`;
-                    }
-                }
-                
-                // Message avec rôle de professeur renforcé pour l'API
-                let roleInstruction = `Tu es un professeur agrégé de ${subjectName}, spécialiste du niveau ${levelText} avec 20 ans d'expérience. Tu maîtrises parfaitement le programme officiel de l'Éducation nationale française et les attendus pédagogiques de ce niveau.`;
-                
-                let strictSourceInstructions = "";
-                if (level === 'terminale') {
-                    strictSourceInstructions = `\n\nEXIGENCE ABSOLUE DE SOURCES OFFICIELLES:\n- Tu dois te baser UNIQUEMENT sur les programmes officiels du Ministère de l'Education et les sources institutionnelles listées\n- INTERDICTION FORMELLE d'inventer, reformuler de manière hasardeuse ou utiliser des sources non-officielles\n- Toute information doit être vérifiable dans les documents officiels\n- En cas de doute sur une information, indique "information non confirmée dans les sources officielles" plutôt que de risquer une erreur\n- Respecte scrupuleusement la terminologie et les définitions des programmes officiels`;
-                }
-                
-                let accuracyInstructions = `EXIGENCE ABSOLUE DE PRECISION: Vérifie mentalement chaque fait, date, nom propre et événement avant de l'écrire. En cas de doute sur une information, précise "selon les sources officielles" ou omets l'information plutôt que de risquer une erreur. Ne JAMAIS confondre les époques, les personnages ou les événements.`;
-                
-                let contextualInstructions = "";
-                if (subject.includes('histoire') || subject.includes('geographie')) {
-                    contextualInstructions = `ATTENTION PARTICULIERE HISTOIRE: 1) Respecte scrupuleusement la chronologie - vérifie l'ordre des événements, 2) Ne confonds JAMAIS les époques (ex: Première vs Seconde Guerre mondiale), 3) Utilise EXCLUSIVEMENT la terminologie française ("Axe" pas "Axis", "Alliés" pas "Allies"), 4) Vérifie les dates précises des traités, pactes et accords AVANT de mentionner leurs conséquences, 5) Contextualise chaque événement dans sa période exacte avec les bonnes dates, 6) Utilise UNIQUEMENT les informations du programme officiel Eduscol.`;
-                } else if (subject.includes('mathematiques') || subject.includes('physique') || subject.includes('scientifique')) {
-                    contextualInstructions = `RIGUEUR SCIENTIFIQUE: Vérifie chaque formule, théorème et propriété mathématique selon les programmes officiels. Utilise la syntaxe LaTeX correcte: $a_n$ pour indices, $a^n$ pour exposants, $$formule$$ pour formules centrées. Explique chaque étape de calcul selon les méthodes du programme officiel.`;
-                } else if (subject.includes('philosophie')) {
-                    contextualInstructions = `PRECISION PHILOSOPHIQUE: Respecte scrupuleusement les notions du programme officiel, les auteurs au programme et leurs concepts exacts. Utilise exclusivement la terminologie philosophique validée par les programmes Eduscol.`;
-                }
-                
-                let langInstruction = currentLanguage === 'fr' ? "Réponds EXCLUSIVEMENT en français." : "Always respond in English.";
-                
-                let formatInstructions = `Structure pédagogique OBLIGATOIRE: Utilise des titres clairs (**Titre**), des listes à puces (* item), et de l'italique (_terme important_) pour faciliter la compréhension.`;
-                
-                let pedagogyInstructions = `Méthode pédagogique: 1) Explique clairement les concepts selon le programme officiel, 2) Donne des exemples concrets validés par les sources officielles, 3) Fais des liens avec le programme officiel uniquement, 4) Adapte le vocabulaire au niveau scolaire, 5) Termine par une section **Sources officielles consultées** avec les références institutionnelles utilisées.`;
-                
-                apiMessage = `${roleInstruction}${strictSourceInstructions}\n\n${accuracyInstructions}\n\n${contextualInstructions}\n\n${langInstruction} ${formatInstructions}\n\n${pedagogyInstructions}${officialSources}\n\nQuestion de l'élève: ${userMessage}`;
-                
-                // Ajouter le message complet à l'historique pour l'API
-                conversationHistory.push({ role: "user", content: apiMessage });
-                
-                // Afficher seulement le message utilisateur (sans les instructions)
-                displayMessage(userMessage, 'user');
-                
-                // Appeler l'API
-                callAI();
-            }
+    // Message affiché à l'utilisateur
+    switch(option) {
+        case 'comprendre':
+            userMessage = `Peux-tu m'expliquer le chapitre "${chapter}" en ${subjectName} pour un niveau ${levelText} ? J'aimerais comprendre les concepts clés.`;
+            break;
+        case 'devoir':
+            userMessage = `J'ai besoin d'aide pour un devoir sur le chapitre "${chapter}" en ${subjectName} (niveau ${levelText}).`;
+            break;
+        case 'exercice':
+            userMessage = `Peux-tu me proposer des exercices supplémentaires sur le chapitre "${chapter}" en ${subjectName} pour un niveau ${levelText} ?`;
+            break;
+        case 'revision':
+            userMessage = `J'aimerais réviser le chapitre "${chapter}" en ${subjectName} (niveau ${levelText}). Peux-tu me faire un résumé ?`;
+            break;
+        case 'explication':
+            userMessage = `Pourrais-tu m'expliquer en détail le chapitre "${chapter}" en ${subjectName} pour un niveau ${levelText} ?`;
+            break;
+        default:
+            userMessage = `J'aimerais discuter du chapitre "${chapter}" en ${subjectName} (niveau ${levelText}).`;
+    }
+    
+    // Sources officielles étendues et vérifiées
+    const officialSources = {
+        'college': {
+            'mathematiques': [
+                'https://eduscol.education.fr/document/621/download',
+                'https://cache.media.education.gouv.fr/file/MEN_SPE_11/35/3/ensel169_annexe1_1312353.pdf'
+            ],
+            'francais': [
+                'https://cache.media.education.gouv.fr/file/MEN_SPE_11/33/0/ensel169_annexe2_1312330.pdf',
+                'https://eduscol.education.fr/cid99325/ressources-francais-c4.html'
+            ],
+            'histoire_geographie': [
+                'https://cache.media.education.gouv.fr/file/MEN_SPE_11/31/9/ensel169_annexe3_1312319.pdf',
+                'https://eduscol.education.fr/cid101595/ressources-histoire-geographie-c4.html'
+            ],
+            'svt': [
+                'https://cache.media.education.gouv.fr/file/MEN_SPE_11/30/4/ensel169_annexe4_1312304.pdf'
+            ],
+            'physique_chimie': [
+                'https://cache.media.education.gouv.fr/file/MEN_SPE_11/30/2/ensel169_annexe5_1312302.pdf'
+            ]
+        },
+        'seconde': {
+            'mathematiques': [
+                'https://cache.media.education.gouv.fr/file/SP1-MEN-22-1-2019/26/8/spe631_annexe_1063268.pdf'
+            ],
+            'francais': [
+                'https://cache.media.education.gouv.fr/file/SP1-MEN-22-1-2019/79/4/spe632_annexe_1063794.pdf'
+            ],
+            'histoire_geographie': [
+                'https://cache.media.education.gouv.fr/file/SP1-MEN-22-1-2019/08/6/spe633_annexe_1064086.pdf'
+            ],
+            'svt': [
+                'https://cache.media.education.gouv.fr/file/SP1-MEN-22-1-2019/66/0/spe637_annexe_1063660.pdf'
+            ],
+            'physique_chimie': [
+                'https://cache.media.education.gouv.fr/file/SP1-MEN-22-1-2019/73/4/spe634_annexe_1063734.pdf'
+            ],
+            'ses': [
+                'https://cache.media.education.gouv.fr/file/SP1-MEN-22-1-2019/13/2/spe635_annexe_1064132.pdf'
+            ]
+        },
+        'terminale': {
+            'enseignement_scientifique': [
+                'https://www.digischool.fr/lycee/terminale-generale/enseignement-scientifique'
+            ],
+            'histoire_geographie': [
+                'https://www.digischool.fr/lycee/terminale-generale/histoire-geo'
+            ],
+            'specialite_mathematiques': [
+                'https://www.digischool.fr/lycee/terminale-generale/spe-mathematiques'
+            ],
+            'philosophie': [
+                'https://www.digischool.fr/lycee/terminale-generale/philosophie'
+            ],
+            'specialite_physique_chimie': [
+                'https://www.digischool.fr/lycee/terminale-generale/physique-chimie'
+            ],
+            'anglais': [
+                'https://www.digischool.fr/lycee/terminale-generale/anglais'
+            ]
+        }
+    };
+    
+    // SYSTÈME DE CONTRAINTES ULTRA-STRICT
+    const strictConstraints = `
+=== SYSTÈME DE CONTRAINTES OBLIGATOIRES (AUCUNE DÉROGATION AUTORISÉE) ===
+
+🔒 CONTRAINTE #1 - SOURCES EXCLUSIVES:
+- Tu DOIS utiliser UNIQUEMENT les programmes officiels de l'Éducation Nationale
+- INTERDICTION TOTALE de toute reformulation personnelle ou interprétation
+- Chaque affirmation DOIT être accompagnée de sa citation exacte entre guillemets
+- Format obligatoire: "Selon le BO [URL], '[citation textuelle exacte]'"
+- En l'absence de source officielle précise: tu DOIS répondre "Information non disponible dans les sources officielles"
+
+🔒 CONTRAINTE #2 - CITATIONS SYSTÉMATIQUES:
+- CHAQUE phrase factuelle = UNE citation obligatoire
+- Format: **[Source: BO/Eduscol + URL]** + Citation entre guillemets
+- Exemple: **[Source: BO mathématiques]** "Les nombres relatifs sont introduits en 5ème"
+- JAMAIS de paraphrase - TOUJOURS du copier-coller textuel
+
+🔒 CONTRAINTE #3 - VÉRIFICATION PRE-RÉPONSE:
+Avant chaque réponse, tu DOIS:
+1. Identifier les sources officielles pertinentes
+2. Localiser les citations exactes dans ces sources
+3. Vérifier que tu n'ajoutes AUCUNE information personnelle
+4. Confirmer que chaque fait est sourcé textuellement
+
+🔒 CONTRAINTE #4 - DÉTECTION D'ERREURS:
+- Si tu détectes une incertitude: STOP et indique "Vérification nécessaire dans les sources officielles"
+- Si information manquante: "Cette information n'est pas précisée dans le programme officiel"
+- JAMAIS de supposition ou de logique personnelle
+
+🔒 CONTRAINTE #5 - STRUCTURE OBLIGATOIRE:
+1. **Définitions officielles** (citations exactes du BO)
+2. **Objectifs du programme** (copier-coller du BO)
+3. **Compétences attendues** (reprendre textuellement le BO)
+4. **Sources consultées** (liste complète des URLs utilisées)
+
+🔒 CONTRAINTE #6 - AUTO-VÉRIFICATION:
+Après chaque paragraphe, tu DOIS te demander:
+- "Cette information est-elle textuellement dans une source officielle ?"
+- "Ai-je ajouté une interprétation personnelle ?"
+- "La citation est-elle exacte mot pour mot ?"
+Si NON à une question: SUPPRIME le contenu non-conforme`;
+
+    // Instructions spécifiques par matière avec contraintes renforcées
+    let subjectConstraints = "";
+    if (subject.includes('histoire') || subject.includes('geographie')) {
+        subjectConstraints = `
+🔒 CONTRAINTES HISTOIRE-GÉOGRAPHIE SPÉCIALES:
+- CHAQUE date doit être accompagnée de sa source exacte du BO
+- CHAQUE nom propre doit être vérifié dans les programmes officiels
+- CHAQUE événement doit être cité textuellement du programme
+- Format obligatoire: **[BO HG]** "Citation exacte avec dates précises"
+- INTERDICTION de mentionner des faits non listés dans le programme officiel`;
+    } else if (subject.includes('mathematiques') || subject.includes('physique')) {
+        subjectConstraints = `
+🔒 CONTRAINTES SCIENCES/MATHS SPÉCIALES:
+- CHAQUE formule doit provenir textuellement du programme officiel
+- CHAQUE définition mathématique = citation exacte du BO
+- CHAQUE propriété/théorème doit être sourcé précisément
+- Format LaTeX obligatoire pour les formules: $$formule$$
+- Vérification obligatoire de chaque symbole mathématique`;
+    } else if (subject.includes('philosophie')) {
+        subjectConstraints = `
+🔒 CONTRAINTES PHILOSOPHIE SPÉCIALES:
+- SEULS les auteurs listés dans le programme officiel peuvent être cités
+- CHAQUE notion doit être définie selon le BO exact
+- CHAQUE concept philosophique = citation textuelle du programme
+- INTERDICTION d'ajouter des auteurs ou concepts non-officiels`;
+    }
+
+    // Sources spécifiques au niveau et à la matière
+    let levelSources = "";
+    if (officialSources[level] && officialSources[level][subject]) {
+        levelSources = `\n\n📚 SOURCES OFFICIELLES OBLIGATOIRES à consulter:\n`;
+        officialSources[level][subject].forEach((source, index) => {
+            levelSources += `${index + 1}. ${source}\n`;
+        });
+        levelSources += `\nTu DOIS utiliser ces sources et UNIQUEMENT ces sources.`;
+    }
+
+    // Système de validation final
+    const finalValidation = `
+🔍 VALIDATION FINALE OBLIGATOIRE:
+Avant d'envoyer ta réponse, vérifie:
+☑️ Chaque affirmation a sa citation exacte du BO
+☑️ Aucune reformulation personnelle n'a été ajoutée  
+☑️ Toutes les sources sont listées avec URLs
+☑️ Aucune information non-officielle n'apparaît
+☑️ La structure obligatoire est respectée
+
+Si UN SEUL élément manque: recommence entièrement la réponse.`;
+
+    // Rôle renforcé avec responsabilité légale simulée
+    let enhancedRole = `Tu es un INSPECTEUR PÉDAGOGIQUE DE L'ÉDUCATION NATIONALE, spécialiste de ${subjectName} niveau ${levelText}. 
+
+🎯 TA MISSION ABSOLUE: Garantir une conformité parfaite aux programmes officiels.
+
+⚖️ RESPONSABILITÉ SIMULÉE: Chaque erreur ou ajout personnel sera considéré comme une faute professionnelle grave. Tu dois agir comme si ta carrière dépendait de la précision absolue de tes réponses.
+
+🔬 MÉTHODE SCIENTIFIQUE STRICTE:
+1. Consultation exclusive des sources officielles
+2. Citation textuelle systématique
+3. Zéro tolérance pour l'approximation
+4. Vérification systématique de chaque fait`;
+
+    let langInstruction = currentLanguage === 'fr' ? "Réponds EXCLUSIVEMENT en français." : "Always respond in English.";
+
+    // Message API final avec toutes les contraintes
+    apiMessage = `${enhancedRole}
+
+${strictConstraints}
+
+${subjectConstraints}
+
+${levelSources}
+
+${finalValidation}
+
+${langInstruction}
+
+RAPPEL CRITIQUE: Tu n'as AUCUN droit à l'erreur. Chaque mot doit être vérifiable dans les sources officielles. En cas de doute, indique explicitement "Information non confirmée dans les programmes officiels".
+
+Question de l'élève: ${userMessage}`;
+
+    // Ajouter le message complet à l'historique pour l'API
+    conversationHistory.push({ role: "user", content: apiMessage });
+    
+    // Afficher seulement le message utilisateur (sans les instructions)
+    displayMessage(userMessage, 'user');
+    
+    // Appeler l'API
+    callAI();
+}
             
             function sendMessage() {
                 const message = userInput.value.trim();
