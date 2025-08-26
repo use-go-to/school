@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -2101,27 +2102,52 @@ ATTENTION: Aucune erreur factuelle n'est tolérée. Ces flashcards seront utilis
                         userMessage = `J'aimerais discuter du chapitre "${chapter}" en ${subjectName} (niveau ${levelText}).`;
                 }
                 
+                // Sources officielles spécifiques pour Terminale
+                let officialSources = "";
+                if (level === 'terminale') {
+                    const terminaleSources = {
+                        'enseignement_scientifique': 'Programme officiel: https://www.education.gouv.fr/sites/default/files/ensel807_annexe.pdf',
+                        'histoire_geographie': 'Programme officiel: https://eduscol.education.fr/document/23416/download',
+                        'specialite_mathematiques': 'Programme officiel: https://eduscol.education.fr/document/24568/download',
+                        'philosophie': 'Programme officiel: https://eduscol.education.fr/document/24043/download',
+                        'specialite_physique_chimie': 'Programme officiel: https://eduscol.education.fr/document/22669/download',
+                        'anglais': 'Programme officiel: https://www.education.gouv.fr/sites/default/files/ensel621_annexe4.pdf',
+                        'allemand': 'Programme officiel: https://www.education.gouv.fr/sites/default/files/ensel621_annexe2_ok.pdf'
+                    };
+                    
+                    if (terminaleSources[subject]) {
+                        officialSources = `\n\nSOURCES OBLIGATOIRES pour Terminale ${subjectName}:\n- ${terminaleSources[subject]}\n- Cours fiables: https://www.digischool.fr/lycee/terminale-generale et https://www.lelivrescolaire.fr/\n- Quiz Lumni: https://www.lumni.fr/lycee/terminale/tous-les-quiz`;
+                    } else {
+                        officialSources = `\n\nSOURCES FIABLES UNIQUEMENT:\n- Programme EMC: https://eduscol.education.fr/document/23707/download\n- Cours: https://www.digischool.fr/lycee/terminale-generale et https://www.lelivrescolaire.fr/\n- Quiz: https://www.lumni.fr/lycee/terminale/tous-les-quiz`;
+                    }
+                }
+                
                 // Message avec rôle de professeur renforcé pour l'API
                 let roleInstruction = `Tu es un professeur agrégé de ${subjectName}, spécialiste du niveau ${levelText} avec 20 ans d'expérience. Tu maîtrises parfaitement le programme officiel de l'Éducation nationale française et les attendus pédagogiques de ce niveau.`;
                 
-                let accuracyInstructions = `EXIGENCE ABSOLUE DE PRECISION: Vérifie mentalement chaque fait, date, nom propre et événement avant de l'écrire. En cas de doute sur une information, précise "selon certaines sources" ou omets l'information plutôt que de risquer une erreur. Ne JAMAIS confondre les époques, les personnages ou les événements.`;
+                let strictSourceInstructions = "";
+                if (level === 'terminale') {
+                    strictSourceInstructions = `\n\nEXIGENCE ABSOLUE DE SOURCES OFFICIELLES:\n- Tu dois te baser UNIQUEMENT sur les programmes officiels du Ministère de l'Education et les sources institutionnelles listées\n- INTERDICTION FORMELLE d'inventer, reformuler de manière hasardeuse ou utiliser des sources non-officielles\n- Toute information doit être vérifiable dans les documents officiels\n- En cas de doute sur une information, indique "information non confirmée dans les sources officielles" plutôt que de risquer une erreur\n- Respecte scrupuleusement la terminologie et les définitions des programmes officiels`;
+                }
+                
+                let accuracyInstructions = `EXIGENCE ABSOLUE DE PRECISION: Vérifie mentalement chaque fait, date, nom propre et événement avant de l'écrire. En cas de doute sur une information, précise "selon les sources officielles" ou omets l'information plutôt que de risquer une erreur. Ne JAMAIS confondre les époques, les personnages ou les événements.`;
                 
                 let contextualInstructions = "";
                 if (subject.includes('histoire') || subject.includes('geographie')) {
-                    contextualInstructions = `ATTENTION PARTICULIERE HISTOIRE: 1) Respecte scrupuleusement la chronologie - vérifie l'ordre des événements, 2) Ne confonds JAMAIS les époques (ex: Première vs Seconde Guerre mondiale), 3) Utilise EXCLUSIVEMENT la terminologie française ("Axe" pas "Axis", "Alliés" pas "Allies"), 4) Vérifie les dates précises des traités, pactes et accords AVANT de mentionner leurs conséquences, 5) Contextualise chaque événement dans sa période exacte avec les bonnes dates.`;
+                    contextualInstructions = `ATTENTION PARTICULIERE HISTOIRE: 1) Respecte scrupuleusement la chronologie - vérifie l'ordre des événements, 2) Ne confonds JAMAIS les époques (ex: Première vs Seconde Guerre mondiale), 3) Utilise EXCLUSIVEMENT la terminologie française ("Axe" pas "Axis", "Alliés" pas "Allies"), 4) Vérifie les dates précises des traités, pactes et accords AVANT de mentionner leurs conséquences, 5) Contextualise chaque événement dans sa période exacte avec les bonnes dates, 6) Utilise UNIQUEMENT les informations du programme officiel Eduscol.`;
                 } else if (subject.includes('mathematiques') || subject.includes('physique') || subject.includes('scientifique')) {
-                    contextualInstructions = `RIGUEUR SCIENTIFIQUE: Vérifie chaque formule, théorème et propriété mathématique. Utilise la syntaxe LaTeX correcte: $a_n$ pour indices, $a^n$ pour exposants, $$formule$$ pour formules centrées. Explique chaque étape de calcul.`;
-                } else if (subject.includes('francais') || subject.includes('litterature')) {
-                    contextualInstructions = `PRECISION LITTERAIRE: Vérifie les titres d'œuvres, noms d'auteurs, dates de publication, mouvements littéraires. Contextualise chaque œuvre dans son époque et son mouvement.`;
+                    contextualInstructions = `RIGUEUR SCIENTIFIQUE: Vérifie chaque formule, théorème et propriété mathématique selon les programmes officiels. Utilise la syntaxe LaTeX correcte: $a_n$ pour indices, $a^n$ pour exposants, $$formule$$ pour formules centrées. Explique chaque étape de calcul selon les méthodes du programme officiel.`;
+                } else if (subject.includes('philosophie')) {
+                    contextualInstructions = `PRECISION PHILOSOPHIQUE: Respecte scrupuleusement les notions du programme officiel, les auteurs au programme et leurs concepts exacts. Utilise exclusivement la terminologie philosophique validée par les programmes Eduscol.`;
                 }
                 
                 let langInstruction = currentLanguage === 'fr' ? "Réponds EXCLUSIVEMENT en français." : "Always respond in English.";
                 
                 let formatInstructions = `Structure pédagogique OBLIGATOIRE: Utilise des titres clairs (**Titre**), des listes à puces (* item), et de l'italique (_terme important_) pour faciliter la compréhension.`;
                 
-                let pedagogyInstructions = `Méthode pédagogique: 1) Explique clairement les concepts, 2) Donne des exemples concrets du niveau ${levelText}, 3) Fais des liens avec le programme officiel, 4) Adapte le vocabulaire au niveau scolaire, 5) Termine par une section **Sources recommandées** avec 3-4 références fiables (manuels scolaires, sites institutionnels, documentaires reconnus).`;
+                let pedagogyInstructions = `Méthode pédagogique: 1) Explique clairement les concepts selon le programme officiel, 2) Donne des exemples concrets validés par les sources officielles, 3) Fais des liens avec le programme officiel uniquement, 4) Adapte le vocabulaire au niveau scolaire, 5) Termine par une section **Sources officielles consultées** avec les références institutionnelles utilisées.`;
                 
-                apiMessage = `${roleInstruction}\n\n${accuracyInstructions}\n\n${contextualInstructions}\n\n${langInstruction} ${formatInstructions}\n\n${pedagogyInstructions}\n\nQuestion de l'élève: ${userMessage}`;
+                apiMessage = `${roleInstruction}${strictSourceInstructions}\n\n${accuracyInstructions}\n\n${contextualInstructions}\n\n${langInstruction} ${formatInstructions}\n\n${pedagogyInstructions}${officialSources}\n\nQuestion de l'élève: ${userMessage}`;
                 
                 // Ajouter le message complet à l'historique pour l'API
                 conversationHistory.push({ role: "user", content: apiMessage });
